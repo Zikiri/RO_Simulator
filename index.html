@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Zikiri">
+    <link rel="shortcut icon" href="#" />
+    <title>RO Simulator</title>
+
+    <script type="text/javascript" src="https://www.divine-pride.net/scripts/tooltip.js"></script>
+
+    <script type="text/javascript" src="js/jquery-3.6.0.js"></script>
+    <script type="text/javascript" src="js/tables.js"></script>
+    <script type="text/javascript" src="js/init_objects.js"></script>
+    <script type="text/javascript" src="js/formulas.js"></script>
+    <script type="text/javascript" src="js/script_interpreter.js"></script>
+    <script type="text/javascript" src="js/ui.js"></script>
+
+
+
+
+    <!-- inline css -->
+    <style>
+        .statvalue {
+            text-align: right;
+            white-space: nowrap;
+        }
+        
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        
+        table {
+            background-color: #daebfa;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <ahref="#"><b>RO Simulator</b></a>
+    </header>
+    <hr />
+
+    <div>
+
+        <table style="border: 2px solid black;border-spacing: 1px;">
+            <thead>
+                <tr>
+                    <th colspan="7" style="text-align: left;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><label>Class</label></td>
+                    <td colspan="2"><select id="Class" style="width:250px;"></select></td>
+                    <td><label>Base Level</label></td>
+                    <td><input type="number" id="BaseLvl" class="onlynum" value="1" min="1" step="1" max="200" size="5" /></td>
+                    <td><label for="JobLvl">Job Level</label></td>
+                    <td><input type="number" id="JobLvl" class="onlynum" value="1" min="1" step="1" max="70" size="5" /></td>
+                </tr>
+                <tr>
+                    <td><label>Str</label></td>
+                    <td>
+                        <input type="number" id="baseStat0" class="onlynum" value="1" min="1" step="1" max="130" size="5" /> &nbsp; + &nbsp; <label id="addStat0">0</label>
+                    </td>
+                    <td><label id="reqdStat0"></label></td>
+                    <td><label>Atk</label></td>
+                    <td class="statvalue"><label id="subStat0">0</label> + <label id="subStat1">0</label></td>
+                    <td><label>Def</label></td>
+                    <td class="statvalue"><label id="subStat4">0</label> + <label id="subStat5">0</label></td>
+                </tr>
+                <tr>
+                    <td><label>Agi</label></td>
+                    <td>
+                        <input type="number" id="baseStat1" class="onlynum" value="1" min="1" step="1" max="130" size="5" /> &nbsp; + &nbsp; <label id="addStat1">0</label>
+                    </td>
+                    <td><label id="reqdStat1"></label></td>
+                    <td><label>Matk</label></td>
+                    <td class="statvalue"><label id="subStat2">0</label> + <label id="subStat3">0</label></td>
+                    <td><label>Mdef</label></td>
+                    <td class="statvalue"><label id="subStat6">0</label> + <label id="subStat7">0</label></td>
+                </tr>
+                <tr>
+                    <td><label>Vit</label></td>
+                    <td>
+                        <input type="number" id="baseStat2" class="onlynum" value="1" min="1" step="1" max="130" size="5" /> &nbsp; + &nbsp; <label id="addStat2">0</label>
+                    </td>
+                    <td><label id="reqdStat2"></label></td>
+                    <td><label>Hit</label></td>
+                    <td class="statvalue"><label id="subStat8">0</label></td>
+                    <td><label>Flee</label></td>
+                    <td class="statvalue"><label id="subStat10">0</label> + <label id="subStat11">0</label></td>
+                </tr>
+                <tr>
+                    <td><label>Int</label></td>
+                    <td>
+                        <input type="number" id="baseStat3" class="onlynum" value="1" min="1" step="1" max="130" size="5" /> &nbsp; + &nbsp; <label id="addStat3">0</label>
+                    </td>
+                    <td><label id="reqdStat3"></label></td>
+                    <td><label>Critical</label></td>
+                    <td class="statvalue"><label id="subStat9">0</label></td>
+                    <td><label>Aspd</label></td>
+                    <td class="statvalue"><label id="subStat12">0</label></td>
+                </tr>
+                <tr>
+                    <td><label>Dex</label></td>
+                    <td>
+                        <input type="number" id="baseStat4" class="onlynum" value="1" min="1" step="1" max="130" size="5" /> &nbsp; + &nbsp; <label id="addStat4">0</label>
+                    </td>
+                    <td><label id="reqdStat4"></label></td>
+                    <td><label>HP</label></td>
+                    <td class="statvalue"><label id="subStat13">0</label></td>
+                    <td><label>SP</label></td>
+                    <td class="statvalue"><label id="subStat14">0</label></td>
+                </tr>
+                <tr>
+                    <td><label>Luk</label></td>
+                    <td>
+                        <input type="number" id="baseStat5" class="onlynum" value="1" min="1" step="1" max="130" size="5" /> &nbsp; + &nbsp; <label id="addStat5">0</label>
+                    </td>
+                    <td><label id="reqdStat5"></label></td>
+                    <td><label>Weight</label></td>
+                    <td class="statvalue"><label id="subStat15">0</label></td>
+                    <td><label>Status Points</label></td>
+                    <td class="statvalue"><label id="subStat16">0</label></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br />
+
+        <table style="border: 2px solid black;border-spacing: 1px;">
+            <thead>
+                <tr>
+                    <th colspan="7" style="text-align: left;">Equipment</th>
+                </tr>
+            </thead>
+            <tbody id="EquipmentSection">
+
+            </tbody>
+        </table>
+
+    </div>
+</body>
+
+</html>
+
+<!-- python -m http.server 8000 -->
