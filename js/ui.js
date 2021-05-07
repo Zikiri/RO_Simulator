@@ -4,8 +4,12 @@ var objEquipBonusStats = [0, 0, 0, 0, 0, 0];
 var objTotalStats = [1, 1, 1, 1, 1, 1];
 var objSubStats = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var nClass = 0;
+var nClass_eA = 0;
+var nBaseClass = 0;
+var nBaseJob = 0;
 var nBaseLvl = 1;
 var nJobLvl = 1;
+var objRefineLvls = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var strRHType = "";
 var strLHType = "";
 var objScriptsEquipped = {};
@@ -27,12 +31,12 @@ $(function() {
             return true;
         }
         console.log('key pressed');
-    })
+    });
 
     $('input,select').change(function() {
         console.log('input/select changed');
         refreshAll();
-    })
+    });
 });
 
 function initSetup() {
@@ -53,6 +57,7 @@ function refreshAll() {
     updateTotalStatsData();
     calculateSubStats();
     refreshUIValues();
+    updateScriptsinUI();
 }
 
 function setupEquipmentTable() {
@@ -94,16 +99,20 @@ function setupEquipmentTable() {
     $("#Left_Hand_card2").hide();
     $("#Left_Hand_card3").hide();
 
+    $('input,select').change(function() {
+        console.log('input/select changed');
+        refreshAll();
+    });
+
 }
 
 function setupClassList() {
-    $.each(jsonClassList, function(val, text) {
-        //console.count(val + " " + text);
-        if (val < 0)
-            $('#Class').append($('<option disabled></option>').val(val).html(text));
+    for (var i = 0; i < jsonClassList.length; i++) {
+        if (jsonClassList[i].id < 0)
+            $('#Class').append($('<option disabled></option>').val(jsonClassList[i].id).html(jsonClassList[i].Name));
         else
-            $('#Class').append($('<option></option>').val(val).html(text));
-    });
+            $('#Class').append($('<option></option>').val(jsonClassList[i].id).html(jsonClassList[i].Name));
+    }
 }
 
 function setupListWeaponType() {
@@ -118,6 +127,7 @@ function setupListWeaponType() {
 }
 
 function updateBaseStatData() {
+
     nClass = parseInt($("#Class").val().trim());
     nBaseLvl = parseInt($("#BaseLvl").val());
     nJobLvl = parseInt($("#JobLvl").val());
@@ -125,8 +135,17 @@ function updateBaseStatData() {
     strRHType = "Unarmed";
     strLHType = "Unarmed";
 
+    for (var i = 0; i < jsonClassList.length; i++)
+        if (jsonClassList[i].id == nClass) { nClass_eA = jsonClassList[i].ea_id; break; }
+
+    nBaseClass = nClass_eA & EAJ_BASEMASK;
+    nBaseJob = nClass_eA & EAJ_UPPERMASK;
+
     for (var i = 0; i < 6; i++)
         objBaseStats[i] = parseInt($("#baseStat" + i).val());
+
+    for (var i = 0; i < 10; i++)
+        objRefineLvls[i] = parseInt($("#" + jsonEquipmentList[i].Name + "_refine").val());
 }
 
 function updateJobBonusStatData() {
@@ -367,6 +386,7 @@ function setupScriptsEquipped() {
                     break;
                 }
             }
+            updateScriptsinUI();
         });
     });
 
@@ -383,29 +403,66 @@ function setupScriptsEquipped() {
                         break;
                     }
                 }
+                updateScriptsinUI();
             });
         }
     });
 
+
+}
+
+function updateScriptsinUI() {
+    var content = "";
+    $.each(objScriptsEquipped, function(val, text) {
+        content += '<br>' + val + ": " + text;
+    });
+    $('#allscripts').html(content);
+
+    calculateScriptBonus();
 }
 
 function calculateScriptBonus() {
 
+    var lexer = new Lexer();
+    var parser = null;
+    var evaluator = null;
 
-    if (objScriptsEquipped['Head_Top'] && objScriptsEquipped['Head_Top'] != "") {
+    jsonActiveScripts = {};
 
-        const lexer = new Lexer();
-        lexer.tokenize(objScriptsEquipped['Head_Top']);
-        //console.log(lexer.lexlist);
+    $.each(objScriptsEquipped, function(val, text) {
 
-        const parser = new Parser(lexer.lexlist, "SEMICOLON");
+        var id = -1;
+        for (var i = 0; i < 10; i++)
+            if (jsonEquipmentList[i].Name == val) {
+                id = i;
+                break;
+            }
+
+        text = simplify_script(text, id);
+
+        lexer.tokenize(text);
+        parser = new Parser(lexer.lexlist, "SEMICOLON");
         parser.parse();
-
-        const evaluator = new Evaluator(parser.p);
+        evaluator = new Evaluator(parser.p);
         evaluator.evaluate();
-        console.log(evaluator.data);
+    });
 
-    }
 
+    /*
+        if (objScriptsEquipped['Head_Top'] && objScriptsEquipped['Head_Top'] != "") {
+
+            const lexer = new Lexer();
+            lexer.tokenize(objScriptsEquipped['Head_Top']);
+            //console.log(lexer.lexlist);
+
+            const parser = new Parser(lexer.lexlist, "SEMICOLON");
+            parser.parse();
+
+            const evaluator = new Evaluator(parser.p);
+            evaluator.evaluate();
+            console.log(evaluator.data);
+
+        }
+    */
 
 }

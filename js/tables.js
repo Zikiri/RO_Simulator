@@ -26,104 +26,15 @@ var jsonWeaponTypeList = {
     "Shield": "Shield"
 };
 
-var jsonClassList = {
-    " 0": "Novice",
-    " 1": "Swordman",
-    " 2": "Mage",
-    " 3": "Archer",
-    " 4": "Acolyte",
-    " 5": "Merchant",
-    " 6": "Thief",
-    " -1": "─────────────────",
-    " 7": "Knight",
-    " 8": "Priest",
-    " 9": "Wizard",
-    " 10": "Blacksmith",
-    " 11": "Hunter",
-    " 12": "Assassin",
-    " 14": "Crusader",
-    " 15": "Monk",
-    " 16": "Sage",
-    " 17": "Rogue",
-    " 18": "Alchemist",
-    " 19": "Bard",
-    " 20": "Dancer",
-    " -2": "─────────────────",
-    " 4001": "Novice High",
-    " 4002": "Swordman High",
-    " 4003": "Magician High",
-    " 4004": "Archer High",
-    " 4005": "Acolyte High",
-    " 4006": "Merchant High",
-    " 4007": "Thief High",
-    " -3": "─────────────────",
-    " 4008": "Lord Knight",
-    " 4009": "High Priest",
-    " 4010": "High Wizard",
-    " 4011": "Whitesmith",
-    " 4012": "Sniper",
-    " 4013": "Assassin Cross",
-    " 4015": "Paladin",
-    " 4016": "Champion",
-    " 4017": "Professor",
-    " 4018": "Stalker",
-    " 4019": "Creator",
-    " 4020": "Clown",
-    " 4021": "Gypsy",
-    " -4": "─────────────────",
-    " 4060": "Rune Knight (trans)",
-    " 4061": "Warlock (trans)",
-    " 4062": "Ranger (trans)",
-    " 4063": "Arch Bishop (trans)",
-    " 4064": "Mechanic (trans)",
-    " 4065": "Guillotine Cross (trans)",
-    " 4073": "Royal Guard (trans)",
-    " 4074": "Sorcerer (trans)",
-    " 4075": "Minstrel (trans)",
-    " 4076": "Wanderer (trans)",
-    " 4077": "Sura (trans)",
-    " 4078": "Genetic (trans)",
-    " 4079": "Shadow Chaser (trans)",
-    " -5": "─────────────────",
-    " 4054": "Rune Knight (non-trans)",
-    " 4055": "Warlock (non-trans)",
-    " 4056": "Ranger (non-trans)",
-    " 4057": "Arch Bishop (non-trans)",
-    " 4058": "Mechanic (non-trans)",
-    " 4059": "Guillotine Cross (non-trans)",
-    " 4066": "Royal Guard (non-trans)",
-    " 4067": "Sorcerer (non-trans)",
-    " 4068": "Minstrel (non-trans)",
-    " 4069": "Wanderer (non-trans)",
-    " 4070": "Sura (non-trans)",
-    " 4071": "Genetic (non-trans)",
-    " 4072": "Shadow Chaser (non-trans)",
-    " -6": "─────────────────",
-    " 23": "Super Novice",
-    " 24": "Gunslinger",
-    " 25": "Ninja",
-    " 4046": "Taekwon",
-    " -7": "─────────────────",
-    " 4047": "Star Gladiator",
-    " 4049": "Soul Linker",
-    " 4211": "Kagerou",
-    " 4212": "Oboro",
-    " 4215": "Rebellion",
-    " 114": "Expanded Super Novice",
-    " -8": "─────────────────",
-    " 4239": "Star Emperor",
-    " 4240": "Soul Reaper",
-    " -9": "─────────────────",
-    " 4218": "Summoner"
-}
+
 
 var jsonPrimaryStatList = {
-    "0": "Str",
-    "1": "Agi",
-    "2": "Vit",
-    "3": "Int",
-    "4": "Dex",
-    "5": "Luk",
+    "0": "bStr",
+    "1": "bAgi",
+    "2": "bVit",
+    "3": "bInt",
+    "4": "bDex",
+    "5": "bLuk",
 }
 
 var jsonSubStatList = {
@@ -214,3 +125,586 @@ var jsonEquipmentList = {
         "refine": true
     }
 }
+
+
+//Convert a number to a hexadecimal string with:
+//hexString = yourNumber.toString(16);
+//And reverse the process with:
+//yourNumber = parseInt(hexString, 16);
+
+var EAJ_NOVICE = parseInt("0x0", 16);
+var EAJ_SWORDMAN = parseInt("0x1", 16);
+var EAJ_MAGE = parseInt("0x2", 16);
+var EAJ_ARCHER = parseInt("0x3", 16);
+var EAJ_ACOLYTE = parseInt("0x4", 16);
+var EAJ_MERCHANT = parseInt("0x5", 16);
+var EAJ_THIEF = parseInt("0x6", 16);
+var EAJ_TAEKWON = parseInt("0x7", 16);
+var EAJ_GUNSLINGER = parseInt("0x9", 16);
+var EAJ_NINJA = parseInt("0x0A", 16);
+var EAJ_GANGSI = parseInt("0x0D", 16);
+var EAJ_SUMMONER = parseInt("0x10", 16);
+
+var EAJL_2_1 = parseInt("0x100", 16); //2-1 Class
+var EAJL_2_2 = parseInt("0x200", 16); //2-2 Class
+var EAJL_2 = parseInt("0x300", 16); //2nd Class
+
+var EAJL_UPPER = parseInt("0x1000", 16); //Rebith
+var EAJL_BABY = parseInt("0x2000", 16); //Baby
+var EAJL_THIRD = parseInt("0x4000", 16); //3rd Class
+
+// & with job id to strip
+var EAJ_BASEMASK = parseInt('0xff', 16); //strips also the 2nd class attributes
+var EAJ_UPPERMASK = parseInt('0x0fff', 16); //strips the upper/baby characteristics of a class
+//var EAJ_UPPER_T_MASK = parseInt('0x1fff', 16); //keeps characteristics of a class till trans
+var EAJ_THIRDMASK = EAJL_THIRD | EAJ_UPPERMASK; //strips 3rd class attributes
+
+var jsonClassList = [{
+        "id": "0",
+        "Name": "Novice",
+        "ea_id": EAJ_NOVICE,
+        "ScriptName": "Job_Novice",
+        "Mask": EAJ_BASEMASK
+    },
+    {
+        "id": "1",
+        "Name": "Swordman",
+        "ea_id": EAJ_SWORDMAN,
+        "ScriptName": "Job_Swordman",
+        "Mask": EAJ_BASEMASK
+    },
+    {
+        "id": "2",
+        "Name": "Mage",
+        "ea_id": EAJ_MAGE,
+        "ScriptName": "Job_Mage",
+        "Mask": EAJ_BASEMASK
+    },
+    {
+        "id": "3",
+        "Name": "Archer",
+        "ea_id": EAJ_ARCHER,
+        "ScriptName": "Job_Archer",
+        "Mask": EAJ_BASEMASK
+    },
+    {
+        "id": "4",
+        "Name": "Acolyte",
+        "ea_id": EAJ_ACOLYTE,
+        "ScriptName": "Job_Acolyte",
+        "Mask": EAJ_BASEMASK
+    },
+    {
+        "id": "5",
+        "Name": "Merchant",
+        "ea_id": EAJ_NOVICE,
+        "ScriptName": "Job_Merchant",
+        "Mask": EAJ_BASEMASK
+    },
+    {
+        "id": "6",
+        "Name": "Thief",
+        "ea_id": EAJ_NOVICE,
+        "ScriptName": "Job_Thief",
+        "Mask": EAJ_BASEMASK
+    },
+    {
+        "id": "-1",
+        "Name": "─────────────────",
+        "ea_id": "dummy",
+        "ScriptName": "dummy"
+    },
+    {
+        "id": "7",
+        "Name": "Knight",
+        "ea_id": EAJ_SWORDMAN | EAJL_2_1,
+        "ScriptName": "Job_Knight",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "8",
+        "Name": "Priest",
+        "ea_id": EAJ_ACOLYTE | EAJL_2_1,
+        "ScriptName": "Job_Priest",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "9",
+        "Name": "Wizard",
+        "ea_id": EAJ_MAGE | EAJL_2_1,
+        "ScriptName": "Job_Wizard",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "10",
+        "Name": "Blacksmith",
+        "ea_id": EAJ_MERCHANT | EAJL_2_1,
+        "ScriptName": "Job_Blacksmith",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "11",
+        "Name": "Hunter",
+        "ea_id": EAJ_ARCHER | EAJL_2_1,
+        "ScriptName": "Job_Hunter",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "12",
+        "Name": "Assassin",
+        "ea_id": EAJ_THIEF | EAJL_2_1,
+        "ScriptName": "Job_Assassin",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "14",
+        "Name": "Crusader",
+        "ea_id": EAJ_SWORDMAN | EAJL_2_2,
+        "ScriptName": "Job_Crusader",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "15",
+        "Name": "Monk",
+        "ea_id": EAJ_ACOLYTE | EAJL_2_2,
+        "ScriptName": "Job_Monk",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "16",
+        "Name": "Sage",
+        "ea_id": EAJ_MAGE | EAJL_2_2,
+        "ScriptName": "Job_Sage",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "17",
+        "Name": "Rogue",
+        "ea_id": EAJ_THIEF | EAJL_2_2,
+        "ScriptName": "Job_Rogue",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "18",
+        "Name": "Alchemist",
+        "ea_id": EAJ_MERCHANT | EAJL_2_2,
+        "ScriptName": "Job_Alchemist",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "19",
+        "Name": "Bard",
+        "ea_id": EAJ_ARCHER | EAJL_2_2,
+        "ScriptName": "Job_Bard",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "20",
+        "Name": "Dancer",
+        "ea_id": EAJ_ARCHER | EAJL_2_2,
+        "ScriptName": "Job_Dancer",
+        "Mask": EAJ_UPPERMASK
+    },
+    {
+        "id": "-2",
+        "Name": "─────────────────",
+        "ea_id": "dummy",
+        "ScriptName": "dummy"
+    },
+    {
+        "id": "4001",
+        "Name": "Novice High",
+        "ea_id": EAJ_NOVICE | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4002",
+        "Name": "Swordman High",
+        "ea_id": EAJ_SWORDMAN | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4003",
+        "Name": "Magician High",
+        "ea_id": EAJ_MAGE | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4004",
+        "Name": "Archer High",
+        "ea_id": EAJ_ARCHER | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4005",
+        "Name": "Acolyte High",
+        "ea_id": EAJ_ACOLYTE | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4006",
+        "Name": "Merchant High",
+        "ea_id": EAJ_MERCHANT | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4007",
+        "Name": "Thief High",
+        "ea_id": EAJ_THIEF | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "-3",
+        "Name": "─────────────────",
+        "ea_id": "dummy",
+        "ScriptName": "dummy"
+    },
+    {
+        "id": "4008",
+        "Name": "Lord Knight",
+        "ea_id": EAJ_SWORDMAN | EAJL_2_1 | EAJL_UPPER,
+        "ScriptName": "Job_Lord_Knight"
+    },
+    {
+        "id": "4009",
+        "Name": "High Priest",
+        "ea_id": EAJ_ACOLYTE | EAJL_2_1 | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4010",
+        "Name": "High Wizard",
+        "ea_id": EAJ_MAGE | EAJL_2_1 | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4011",
+        "Name": "Whitesmith",
+        "ea_id": EAJ_MERCHANT | EAJL_2_1 | EAJL_UPPER,
+        "ScriptName": "Job_Whitesmith"
+    },
+    {
+        "id": "4012",
+        "Name": "Sniper",
+        "ea_id": EAJ_ARCHER | EAJL_2_1 | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4013",
+        "Name": "Assassin Cross",
+        "ea_id": EAJ_THIEF | EAJL_2_1 | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4015",
+        "Name": "Paladin",
+        "ea_id": EAJ_SWORDMAN | EAJL_2_2 | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4016",
+        "Name": "Champion",
+        "ea_id": EAJ_ACOLYTE | EAJL_2_2 | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4017",
+        "Name": "Professor",
+        "ea_id": EAJ_MAGE | EAJL_2_2 | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4018",
+        "Name": "Stalker",
+        "ea_id": EAJ_THIEF | EAJL_2_2 | EAJL_UPPER,
+        "ScriptName": "Job_Stalker"
+    },
+    {
+        "id": "4019",
+        "Name": "Creator",
+        "ea_id": EAJ_MERCHANT | EAJL_2_2 | EAJL_UPPER,
+        "ScriptName": "Job_Creator"
+    },
+    {
+        "id": "4020",
+        "Name": "Clown",
+        "ea_id": EAJ_ARCHER | EAJL_2_2 | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "4021",
+        "Name": "Gypsy",
+        "ea_id": EAJ_ARCHER | EAJL_2_2 | EAJL_UPPER,
+        "ScriptName": ""
+    },
+    {
+        "id": "-4",
+        "Name": "─────────────────",
+        "ea_id": "",
+        "ScriptName": ""
+    },
+    {
+        "id": "4060",
+        "Name": "Rune Knight (trans)",
+        "ea_id": EAJ_SWORDMAN | EAJL_2_1 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4061",
+        "Name": "Warlock (trans)",
+        "ea_id": EAJ_MAGE | EAJL_2_1 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4062",
+        "Name": "Ranger (trans)",
+        "ea_id": EAJ_ARCHER | EAJL_2_1 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4063",
+        "Name": "Arch Bishop (trans)",
+        "ea_id": EAJ_ACOLYTE | EAJL_2_1 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4064",
+        "Name": "Mechanic (trans)",
+        "ea_id": EAJ_MERCHANT | EAJL_2_1 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": "Job_Mechanic_T"
+    },
+    {
+        "id": "4065",
+        "Name": "Guillotine Cross (trans)",
+        "ea_id": EAJ_THIEF | EAJL_2_1 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4073",
+        "Name": "Royal Guard (trans)",
+        "ea_id": EAJ_SWORDMAN | EAJL_2_2 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4074",
+        "Name": "Sorcerer (trans)",
+        "ea_id": EAJ_MAGE | EAJL_2_2 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4075",
+        "Name": "Minstrel (trans)",
+        "ea_id": EAJ_ARCHER | EAJL_2_2 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4076",
+        "Name": "Wanderer (trans)",
+        "ea_id": EAJ_THIEF | EAJL_2_2 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4077",
+        "Name": "Sura (trans)",
+        "ea_id": EAJ_ACOLYTE | EAJL_2_2 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4078",
+        "Name": "Genetic (trans)",
+        "ea_id": EAJ_MERCHANT | EAJL_2_2 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": "Job_Genetic_T"
+    },
+    {
+        "id": "4079",
+        "Name": "Shadow Chaser (trans)",
+        "ea_id": EAJ_THIEF | EAJL_2_2 | EAJL_UPPER | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "-5",
+        "Name": "─────────────────",
+        "ea_id": "dummy",
+        "ScriptName": "dummy"
+    },
+    {
+        "id": "4054",
+        "Name": "Rune Knight (non-trans)",
+        "ea_id": EAJ_SWORDMAN | EAJL_2_1 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4055",
+        "Name": "Warlock (non-trans)",
+        "ea_id": EAJ_MAGE | EAJL_2_1 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4056",
+        "Name": "Ranger (non-trans)",
+        "ea_id": EAJ_ARCHER | EAJL_2_1 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4057",
+        "Name": "Arch Bishop (non-trans)",
+        "ea_id": EAJ_ACOLYTE | EAJL_2_1 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4058",
+        "Name": "Mechanic (non-trans)",
+        "ea_id": EAJ_MERCHANT | EAJL_2_1 | EAJL_THIRD,
+        "ScriptName": "Job_Mechanic"
+    },
+    {
+        "id": "4059",
+        "Name": "Guillotine Cross (non-trans)",
+        "ea_id": EAJ_THIEF | EAJL_2_1 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4066",
+        "Name": "Royal Guard (non-trans)",
+        "ea_id": EAJ_SWORDMAN | EAJL_2_2 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4067",
+        "Name": "Sorcerer (non-trans)",
+        "ea_id": EAJ_MAGE | EAJL_2_2 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4068",
+        "Name": "Minstrel (non-trans)",
+        "ea_id": EAJ_ARCHER | EAJL_2_2 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4069",
+        "Name": "Wanderer (non-trans)",
+        "ea_id": EAJ_ARCHER | EAJL_2_2 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4070",
+        "Name": "Sura (non-trans)",
+        "ea_id": EAJ_ACOLYTE | EAJL_2_2 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "4071",
+        "Name": "Genetic (non-trans)",
+        "ea_id": EAJ_MERCHANT | EAJL_2_2 | EAJL_THIRD,
+        "ScriptName": "Job_Genetic"
+    },
+    {
+        "id": "4072",
+        "Name": "Shadow Chaser (non-trans)",
+        "ea_id": EAJ_THIEF | EAJL_2_2 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "-6",
+        "Name": "─────────────────",
+        "ea_id": "dummy",
+        "ScriptName": "dummy"
+    },
+    {
+        "id": "23",
+        "Name": "Super Novice",
+        "ea_id": EAJ_NOVICE | EAJL_2_1,
+        "ScriptName": "Job_SuperNovice"
+    },
+    {
+        "id": "24",
+        "Name": "Gunslinger",
+        "ea_id": EAJ_GUNSLINGER,
+        "ScriptName": "Job_Gunslinger"
+    },
+    {
+        "id": "25",
+        "Name": "Ninja",
+        "ea_id": EAJ_NINJA,
+        "ScriptName": "Job_Ninja"
+    },
+    {
+        "id": "4046",
+        "Name": "Taekwon",
+        "ea_id": EAJ_TAEKWON,
+        "ScriptName": "Job_Taekwon"
+    },
+    {
+        "id": "-7",
+        "Name": "─────────────────",
+        "ea_id": "dummy",
+        "ScriptName": "dummy"
+    },
+    {
+        "id": "4047",
+        "Name": "Star Gladiator",
+        "ea_id": EAJ_TAEKWON | EAJL_2_1,
+        "ScriptName": "Job_Star_Gladiator"
+    },
+    {
+        "id": "4049",
+        "Name": "Soul Linker",
+        "ea_id": EAJ_TAEKWON | EAJL_2_2,
+        "ScriptName": "Job_Soul_Linker"
+    },
+    {
+        "id": "4211",
+        "Name": "Kagerou",
+        "ea_id": EAJ_NINJA | EAJL_2_1,
+        "ScriptName": ""
+    },
+    {
+        "id": "4212",
+        "Name": "Oboro",
+        "ea_id": EAJ_NINJA | EAJL_2_1,
+        "ScriptName": ""
+    },
+    {
+        "id": "4215",
+        "Name": "Rebellion",
+        "ea_id": EAJ_GUNSLINGER | EAJL_2_1,
+        "ScriptName": ""
+    },
+    {
+        "id": "114",
+        "Name": "Expanded Super Novice",
+        "ea_id": EAJ_NOVICE | EAJL_2_1 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "-8",
+        "Name": "─────────────────",
+        "ea_id": "dummy",
+        "ScriptName": "dummy"
+    },
+    {
+        "id": "4239",
+        "Name": "Star Emperor",
+        "ea_id": EAJ_NINJA | EAJL_2_1 | EAJL_THIRD,
+        "ScriptName": "Job_Star_Gladiator2"
+    },
+    {
+        "id": "4240",
+        "Name": "Soul Reaper",
+        "ea_id": EAJ_NINJA | EAJL_2_2 | EAJL_THIRD,
+        "ScriptName": ""
+    },
+    {
+        "id": "-9",
+        "Name": "─────────────────",
+        "ea_id": "dummy",
+        "ScriptName": "dummy"
+    },
+    {
+        "id": "4218",
+        "Name": "Summoner",
+        "ea_id": EAJ_SUMMONER,
+        "ScriptName": "Job_Summoner"
+    },
+];
