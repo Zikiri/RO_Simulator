@@ -105,7 +105,7 @@ function JobBonusStats(Class, JobLvl) {
 // HP Calculation
 function BaseHP(Class, BaseLvl) {
     for (var i = 0; i < objBaseHPSPTable.length; i++)
-        if (objBaseHPSPTable[i][2].includes(Class) && objBaseHPSPTable[i][3] == 0 && (parseInt(BaseLvl) + 4) <= objBaseHPSPTable[i].length)
+        if (objBaseHPSPTable[i][2].split(":").includes(Class.toString()) && objBaseHPSPTable[i][3] == 0 && (parseInt(BaseLvl) + 4) <= objBaseHPSPTable[i].length)
             return objBaseHPSPTable[i][parseInt(BaseLvl) + 4];
     return -1;
 }

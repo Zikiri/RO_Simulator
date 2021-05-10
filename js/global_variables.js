@@ -1,3 +1,38 @@
+//Character specific variables
+var objBaseStats = [1, 1, 1, 1, 1, 1];
+var objJobBonusStats = [0, 0, 0, 0, 0, 0];
+var objEquipBonusStats = [0, 0, 0, 0, 0, 0];
+var objTotalStats = [1, 1, 1, 1, 1, 1];
+var objSubStats = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+var nClass = 0;
+var nClass_eA = 0;
+var nBaseClass = 0;
+var nBaseJob = 0;
+var nBaseLvl = 1;
+var nJobLvl = 1;
+var objRefineLvls = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+var strRHType = "Unarmed";
+var strLHType = "Unarmed";
+var objScriptsEquipped = {};
+
+//DB objects loaded from file
+var objJobBonusStatsTable = [];
+var objBaseHPSPTable = [];
+var objTotalStatValues = [];
+var objAspdTable = [];
+var objEquipItemDB = [];
+var objCardItemDB = [];
+//var objEquipScriptsDB = [];
+
+var path_job_basehpsp_db = 'data/rathena_files/db/re/job_basehpsp_db.txt';
+var path_job_bonus_stats = 'data/rathena_files/db/job_db2.txt';
+var path_job_base_aspd = 'data/rathena_files/db/re/job_db1.txt';
+var path_item_db_equip = 'data/rathena_files/db/re/item_db_equip.yml';
+var path_item_db_etc = 'data/rathena_files/db/re/item_db_etc.yml';
+var loadcount = 5; // needs to be aligned with total files loaded
+
+
+//JSON objects for constant tables
 var jsonWeaponTypeList = {
     "Unarmed": "Unarmed",
     "Dagger": "Dagger",
@@ -26,8 +61,6 @@ var jsonWeaponTypeList = {
     "Shield": "Shield"
 };
 
-
-
 var jsonPrimaryStatList = {
     "0": "bStr",
     "1": "bAgi",
@@ -35,7 +68,7 @@ var jsonPrimaryStatList = {
     "3": "bInt",
     "4": "bDex",
     "5": "bLuk",
-}
+};
 
 var jsonSubStatList = {
     "0": "Atk_status",
@@ -61,7 +94,7 @@ var jsonSubStatList = {
     "20": "PerfectHit",
     "21": "Movement Speed",
     "22": "StatusResistance"
-}
+};
 
 var jsonEquipmentList = {
     "0": {
@@ -124,8 +157,7 @@ var jsonEquipmentList = {
         "CardSlots": 1,
         "refine": true
     }
-}
-
+};
 
 //Convert a number to a hexadecimal string with:
 //hexString = yourNumber.toString(16);
@@ -708,3 +740,181 @@ var jsonClassList = [{
         "ScriptName": "Job_Summoner"
     },
 ];
+
+
+var jsonActiveScriptsTemplate = {
+    "bStr": 0,
+    "bAgi": 0,
+    "bVit": 0,
+    "bInt": 0,
+    "bDex": 0,
+    "bLuk": 0,
+    "bAllStats": 0,
+    "bAgiVit": 0,
+    "bAgiDexStr": 0,
+    "bMaxHP": 0,
+    "bMaxSP": 0,
+    "bMaxHPrate": 0,
+    "bMaxSPrate": 0,
+    "bAtk": 0,
+    "bAtk2": 0,
+    "bAtkRate": 0,
+    "bBaseAtk": 0,
+    "bIntMatk": 0,
+    "bMatkRate": 0,
+    "bEquipmentMatk": 0,
+    "bDef": 0,
+    "bDef2": 0,
+    "bDefRate": 0,
+    "bDef2Rate": 0,
+    "bMdef": 0,
+    "bMdef2": 0,
+    "bMdefRate": 0,
+    "bMdef2Rate": 0,
+    "bHit": 0,
+    "bHitRate": 0,
+    "bCritical": 0,
+    "bCriticalRate": 0,
+    "bFlee": 0,
+    "bFleeRate": 0,
+    "bFlee2": 0,
+    "bFlee2Rate": 0,
+    "bSpeedRate": 0,
+    "bSpeedAddRate": 0,
+    "bAspd": 0,
+    "bAspdRate": 0,
+    "bAtkRange": 0,
+    "bCastrate": 0,
+    "bUseSPrate": 0,
+    "bHPrecovRate": 0,
+    "bSPrecovRate": 0,
+    "bDoubleRate": 0,
+    "bDoubleAddRate": 0,
+    "bPerfectHitRate": 0,
+    "bPerfectHitAddRate": 0,
+    "bCriticalDef": 0,
+    "bNearAtkDef": 0,
+    "bLongAtkDef": 0,
+    "bMagicAtkDef": 0,
+    "bMiscAtkDef": 0,
+    "bIgnoreDefRace": {},
+    "bIgnoreDefEle": 0,
+    "bIgnoreMDefRace": 0,
+    "bIgnoreMDefEle": 0,
+    "bIgnoreMdefRate": 0,
+    "bDefRatioAtkRace": 0,
+    "bDefRatioAtkEle": 0,
+    "bAtkEle": "",
+    "bDefEle": 0,
+    "bSplashRange": 0,
+    "bSplashAddRange": 0,
+    "bRestartFullRecover": 0,
+    "bNoCastCancel": 0,
+    "bNoCastCancel2": 0,
+    "bNoSizeFix": 0,
+    "bNoWeaponDamage": 0,
+    "bNoMagicDamage": 0,
+    "bNoGemStone": 0,
+    "bIntravision": 0,
+    "bHealPower": 0,
+    "bHealPower2": 0,
+    "bCritAtkRate": 0,
+    "bNoRegen": 0,
+    "bUnstripableWeapon": 0,
+    "bUnstripableArmor": 0,
+    "bUnstripableHelm": 0,
+    "bUnstripableShield": 0,
+    "bSPGainValue": 0,
+    "bHPGainValue": 0,
+    "bAddStealRate": 0,
+    "bHPDrainValue": 0,
+    "bSPDrainValue": 0,
+    "bAddItemHealRate": 0,
+    "bUnbreakableGarment": 0,
+    "bUnbreakableWeapon": 0,
+    "bUnbreakableArmor": 0,
+    "bUnbreakableHelm": 0,
+    "bUnbreakableShield": 0,
+    "bUnbreakableShoes": 0,
+    "bBreakWeaponRate": 0,
+    "bBreakArmorRate": 0,
+    "bUnbreakable": 0,
+    "bShortWeaponDamageReturn": 0,
+    "bLongWeaponDamageReturn": 0,
+    "bMagicDamageReturn": 0,
+    "bPerfectHide": 0,
+    "bNoKnockback": 0,
+    "bClassChange": 0,
+    "bNoMiscDamage": 0,
+    "bLongAtkRate": 0,
+    "bUnstripable": 0,
+    "bMagicSPGainValue": 0,
+    "bMagicHPGainValue": 0,
+    "bFixedCastrate": 0,
+    "bVariableCastrate": 0,
+    "bIgnoreDefClass": {},
+
+    "bAddEff": {},
+    "bResEff": {},
+    "bCastrate": {},
+    "bAddSize": {},
+    "bMagicAddSize": {},
+    "bSubSize": {},
+    "bAddRace": {},
+    "bMagicAddRace": {},
+    "bSubRace": {},
+    "bAddEle": {},
+    "bMagicAddEle": {},
+    "bSubEle": {},
+    "bAddDamageClass": {},
+    "bAddMagicDamageClass": {},
+    "bAddDefClass": {},
+    "bAddMDefClass": {},
+    "bIgnoreMdefRate": {},
+    "bHPDrainRate": {},
+    "bSPDrainRate": {},
+    "bSPVanishRate": {},
+    "bAddMonsterDropItem": [],
+    "bGetZenyNum": {},
+    "bAddGetZenyNum": {},
+    "bCriticalAddRace": {},
+    "bHPRegenRate": {},
+    "bHPLossRate": {},
+    "bAddEffWhenHit": {},
+    "bSkillAtk": {},
+    "bSkillHeal": {},
+    "bSkillHeal2": {},
+    "bAddRace2": {},
+    "bAddItemHealRate": {},
+    "bSPRegenRate": {},
+    "bSPLossRate": {},
+    "bExpAddRace": {},
+    "bSPGainRace": {},
+    "bSubRace2": {},
+    "bAddMonsterDropItemGroup": {},
+    "bWeaponComaRace": {},
+    "bAddSkillBlow": {},
+    "bIgnoreDefRate": {},
+    "bWeaponComaEle": {},
+    "bAddEff2": {},
+    "bWeaponAtk": {},
+    "bWeaponAtkRate": {},
+    "bHPDrainValueRace": {},
+    "bSPDrainValueRace": {},
+    "bHPGainRaceAttack": {},
+    "bSPGainRaceAttack": {},
+    "bSkillUseSPrate": {},
+    "bSkillUseSP": {},
+    "bSkillCooldown": {},
+    "bSkillFixedCast": {},
+    "bSkillVariableCast": {},
+    "bSkillVariableCastrate": {},
+
+    "bAutoSpell": [],
+    "bAutoSpellWhenHit": {},
+    "bAutoSpellOnSkill": {},
+    "bHPDrainRateRace": {},
+    "bSPDrainRateRace": {},
+    "bAddEffOnSkill": {},
+    "bAddClassDropItem": {},
+};

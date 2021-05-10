@@ -1,21 +1,7 @@
 // Initialise objects and values on UI
 
-var loadcount = 5;
 
-var objJobBonusStatsTable = [];
-var objBaseHPSPTable = [];
-var objTotalStatValues = [];
-var objAspdTable = [];
-var objEquipItemDB = [];
-var objCardItemDB = [];
 
-var objEquipScriptsDB = [];
-
-var path_job_basehpsp_db = 'data/rathena_files/db/re/job_basehpsp_db.txt';
-var path_job_bonus_stats = 'data/rathena_files/db/job_db2.txt';
-var path_job_base_aspd = 'data/rathena_files/db/re/job_db1.txt';
-var path_item_db_equip = 'data/rathena_files/db/re/item_db_equip.yml';
-var path_item_db_etc = 'data/rathena_files/db/re/item_db_etc.yml';
 
 
 function initialiseObjects() {
@@ -219,61 +205,5 @@ function initialiseObjects() {
         if (loadcount == 0) initSetup();
     });
 
-    //test to pull only scripts
-    /*
-    $.get(path_item_db_equip, function(data) {
 
-        objEquipScriptsDB = [];
-        var lines = data.split("\n");
-        //console.log(lines);
-
-        var k = -1
-        var objID = -1;
-        var objItemScript = "";
-
-        for (var i = 0; i < lines.length; i++) {
-
-            //ignore comments and empty lines
-            if (lines[i].startsWith("#") || lines[i] === "")
-                continue;
-
-            //console.log(lines[i]);
-
-            //check for new Id and start next entry
-            if (lines[i].startsWith("  - Id: ")) {
-
-                if (objItemScript && objItemScript.length > 0 && objID > 0) {
-                    //console.log("checkobjid " + objID);
-                    objEquipScriptsDB[objID] = objItemScript;
-                    //console.log("obj pushed " + objItem);
-                }
-                k++;
-                objItemScript = "";
-                ObjID = parseInt(lines[i].replace("  - Id: ", "")); //.push(parseInt(lines[i].replace("  - Id: ", "")));
-                //console.log("test " + lines[i] + " " + lines[i].replace("-Id:", ""));
-
-            } else if (lines[i].startsWith("    Script:")) {
-
-
-
-                objItemScript = "";
-                for (var j = i + 1; j < lines.length; j++) {
-                    if (lines[j].startsWith("  - Id: "))
-                        break;
-                    objItemScript += lines[j].trim() + "\n";
-                    //console.log(objItemScript);
-                }
-                //console.log(objItemScript);
-            }
-
-        }
-
-        //console.log("checkobjid at end " + ObjID);
-        //console.log("check script value at end " + objItemScript);
-
-        if (objItemScript.length > 0 && objID > 0)
-            objEquipScriptsDB[objID] = objItemScript;
-
-        console.log("path_item_db_equip file loaded to equip script object");
-    });*/
 }

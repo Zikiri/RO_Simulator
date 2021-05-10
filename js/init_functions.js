@@ -1,43 +1,4 @@
-var objBaseStats = [1, 1, 1, 1, 1, 1];
-var objJobBonusStats = [0, 0, 0, 0, 0, 0];
-var objEquipBonusStats = [0, 0, 0, 0, 0, 0];
-var objTotalStats = [1, 1, 1, 1, 1, 1];
-var objSubStats = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-var nClass = 0;
-var nClass_eA = 0;
-var nBaseClass = 0;
-var nBaseJob = 0;
-var nBaseLvl = 1;
-var nJobLvl = 1;
-var objRefineLvls = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-var strRHType = "";
-var strLHType = "";
-var objScriptsEquipped = {};
-//var objScriptsCards = {};
-
-// Function called when page is ready
-$(function() {
-    console.log('ready!');
-
-    initialiseObjects();
-    initSetup();
-
-    $('.onlynum').keypress(function(event) {
-
-        if (this.type = "Number") {
-            var ASCIICode = (event.which) ? event.which : event.keyCode
-            if (ASCIICode > 31 && (ASCIICode < 48 || ASCIICode > 57))
-                return false;
-            return true;
-        }
-        console.log('key pressed');
-    });
-
-    $('input,select').change(function() {
-        console.log('input/select changed');
-        refreshAll();
-    });
-});
+// Functions dealing with inital setup on first load
 
 function initSetup() {
     setupClassList();
@@ -49,16 +10,65 @@ function initSetup() {
     setupWeaponListSwitch();
     setupScriptsEquipped();
     refreshAll();
+
+    $('#Class').change(function() {
+        console.log('Class changed');
+
+        nClass = parseInt($("#Class").val().trim());
+        for (var i = 0; i < jsonClassList.length; i++)
+            if (jsonClassList[i].id == nClass) { nClass_eA = jsonClassList[i].ea_id; break; }
+
+        nBaseClass = nClass_eA & EAJ_BASEMASK;
+        nBaseJob = nClass_eA & EAJ_UPPERMASK;
+        // add function call to update UI
+        //update equip list(maybe / no implementation as of yet)
+        updateJobBonusStatData();
+        //update sub stats
+
+        refreshAll();
+    });
+
+    $('.level').change(function() {
+        nBaseLvl = parseInt($("#BaseLvl").val());
+        nJobLvl = parseInt($("#JobLvl").val());
+
+        updateJobBonusStatData();
+        // update equip list as per lvl req (maybe / no implementation as of yet)
+        // update substats
+        refreshAll();
+    });
+
+    $('.basestat').change(function() {
+
+        for (var i = 0; i < 6; i++)
+            objBaseStats[i] = parseInt($("#baseStat" + i).val());
+
+        refreshAll();
+    });
+
+    $('.refine').change(function() {
+
+        for (var i = 0; i < 10; i++)
+            objRefineLvls[i] = parseInt($("#" + jsonEquipmentList[i].Name + "_refine").val());
+
+        // update substats
+        // update scripts (since some are reliant on refine levels)
+
+        calculateScriptBonus();
+        refreshAll();
+    });
 }
 
-function refreshAll() {
-    updateBaseStatData();
-    updateJobBonusStatData();
-    updateTotalStatsData();
-    calculateSubStats();
-    refreshUIValues();
-    updateScriptsinUI();
+
+function setupClassList() {
+    for (var i = 0; i < jsonClassList.length; i++) {
+        if (jsonClassList[i].id < 0)
+            $('#Class').append($('<option disabled></option>').val(jsonClassList[i].id).html(jsonClassList[i].Name));
+        else
+            $('#Class').append($('<option></option>').val(jsonClassList[i].id).html(jsonClassList[i].Name));
+    }
 }
+
 
 function setupEquipmentTable() {
 
@@ -66,24 +76,21 @@ function setupEquipmentTable() {
     var i = 0;
     $.each(jsonEquipmentList, function(key, val) {
 
-        //console.log(val.Name + " " + val.CardSlots + " " + val.refine);
-
         if (i % 2 == 0) content += "<tr>"
-
         if (i % 2 != 0) content += "<td id=\"" + val.Name + "_link\"> " + val.Label + " </td>";
         content += "<td> ";
 
         if (i == 4 || i == 5) { // add weapon type
-            content += "<select id=\"" + val.Name + "_type\" style=\"width:100px;\"></select>";
+            content += "<select id=\"" + val.Name + "_type\" style=\"width:100px;\" class=\"weapontype\"></select>";
         }
 
-        content += "&nbsp;+ <input type=\"number\" id=\"" + val.Name + "_refine\" value=\"0\" min=\"0\" step=\"1\" max=\"20\" style=\"width:35px;\" /> ";
-        content += " <select id=\"" + val.Name + "\" style=\"width:" + (i == 4 || i == 5 ? "250" : "350") + "px;float: right;\"></select> ";
+        content += "&nbsp;+ <input type=\"number\" id=\"" + val.Name + "_refine\" value=\"0\" min=\"0\" step=\"1\" max=\"20\" style=\"width:35px;\" class=\"refine\" /> ";
+        content += " <select id=\"" + val.Name + "\" style=\"width:" + (i == 4 || i == 5 ? "250" : "350") + "px;float: right;\" class=\"equip\"></select> ";
         content += " <br /> ";
         for (var j = 0; j < val.CardSlots; j++)
-            content += " <select id=\"" + val.Name + "_card" + j + "\" style=\"width:100px;\"></select> ";
+            content += " <select id=\"" + val.Name + "_card" + j + "\" style=\"width:100px;\" class=\"card\"></select> ";
         content += "</td>";
-        if (i % 2 == 0) content += " <td id=\"" + val.Name + "_link\">" + val.Label + "</td> ";
+        if (i % 2 == 0) content += " <td id=\"" + val.Name + "_link\" class=\"link\">" + val.Label + "</td> ";
         if (i == 0) content += " <td rowspan=\"5\">Char</td> "
 
         if (i % 2 != 0) content += " </tr> "
@@ -92,7 +99,6 @@ function setupEquipmentTable() {
     });
     console.log("equipment table setup");
     $('#EquipmentSection').html(content);
-
 
     //hide extra 3 card slots for LH until needed
     $("#Left_Hand_card1").hide();
@@ -106,87 +112,16 @@ function setupEquipmentTable() {
 
 }
 
-function setupClassList() {
-    for (var i = 0; i < jsonClassList.length; i++) {
-        if (jsonClassList[i].id < 0)
-            $('#Class').append($('<option disabled></option>').val(jsonClassList[i].id).html(jsonClassList[i].Name));
-        else
-            $('#Class').append($('<option></option>').val(jsonClassList[i].id).html(jsonClassList[i].Name));
-    }
-}
 
 function setupListWeaponType() {
-
     $.each(jsonWeaponTypeList, function(val, text) {
         if (val != "Shield" && !text.includes("unused"))
             $('#Right_Hand_type').append($('<option></option>').val(val).html(text));
         if (val == "Shield" || val == "Dagger" || val == "1hSword" || val == "1hAxe" || val == "Unarmed")
             $('#Left_Hand_type').append($('<option></option>').val(val).html(text));
-        //console.log("testRightLeftHandtypelist");
     });
 }
 
-function updateBaseStatData() {
-
-    nClass = parseInt($("#Class").val().trim());
-    nBaseLvl = parseInt($("#BaseLvl").val());
-    nJobLvl = parseInt($("#JobLvl").val());
-
-    strRHType = "Unarmed";
-    strLHType = "Unarmed";
-
-    for (var i = 0; i < jsonClassList.length; i++)
-        if (jsonClassList[i].id == nClass) { nClass_eA = jsonClassList[i].ea_id; break; }
-
-    nBaseClass = nClass_eA & EAJ_BASEMASK;
-    nBaseJob = nClass_eA & EAJ_UPPERMASK;
-
-    for (var i = 0; i < 6; i++)
-        objBaseStats[i] = parseInt($("#baseStat" + i).val());
-
-    for (var i = 0; i < 10; i++)
-        objRefineLvls[i] = parseInt($("#" + jsonEquipmentList[i].Name + "_refine").val());
-}
-
-function updateJobBonusStatData() {
-    objJobBonusStats = JobBonusStats(nClass, nJobLvl);
-}
-
-function updateTotalStatsData() {
-    for (var i = 0; i < 6; i++)
-        objTotalStats[i] = objBaseStats[i] + objJobBonusStats[i] + objEquipBonusStats[i];
-}
-
-function calculateSubStats() {
-    objSubStats[0] = StatusAtk(nBaseLvl, objTotalStats);
-    objSubStats[1] = WeaponAtk();
-    objSubStats[2] = StatusMatk(nBaseLvl, objTotalStats);
-    objSubStats[3] = WeaponMatk();
-    objSubStats[4] = SoftDef(nBaseLvl, objTotalStats);
-    objSubStats[5] = HardDef();
-    objSubStats[6] = SoftMdef(nBaseLvl, objTotalStats);
-    objSubStats[7] = HardMdef();
-    objSubStats[8] = TotalHit(nBaseLvl, objTotalStats, 0); // bonus hit pending
-    objSubStats[9] = TotalCritRate(objTotalStats, 0); // bonus crit pending
-    objSubStats[10] = TotalFlee(nBaseLvl, objTotalStats, 0); // bonus flee pending
-    objSubStats[11] = TotalPerfectDodge(objTotalStats, 0); // bonus PD pending
-    objSubStats[12] = TotalAspd(nClass, objTotalStats, strRHType);
-    objSubStats[13] = MaxHP(nClass, nBaseLvl, objTotalStats, 0, 0);
-    objSubStats[14] = MaxSP(nClass, nBaseLvl, objTotalStats, 0, 0);
-    objSubStats[15] = 0;
-    objSubStats[16] = PendingStatPoints(nBaseLvl, nClass, objBaseStats);
-}
-
-function refreshUIValues() {
-    //job+equipment bonus stats
-    for (var i = 0; i < 6; i++) {
-        $('#addStat' + i).html(objJobBonusStats[i] + objEquipBonusStats[i]);
-        $('#reqdStat' + i).html(NextStatPointCost(objBaseStats[i]));
-    }
-    //sub stats
-    for (var i = 0; i < 17; i++)
-        $('#subStat' + i).html(objSubStats[i]);
-}
 
 //fill select lists for all equipments except weapon
 function setupEquipmentLists() {
@@ -216,6 +151,7 @@ function setupEquipmentLists() {
     });
 }
 
+
 function setupCardLists() {
 
     $.each(jsonEquipmentList, function(val, text) {
@@ -240,6 +176,7 @@ function setupCardLists() {
         }
     });
 }
+
 
 function setupEquipmentLinks() {
 
@@ -271,29 +208,33 @@ function setupEquipmentLinks() {
             }
 
             if ($('#' + eleID).val() != 0) {
+                text += "<a href=\"https://www.divine-pride.net/database/item/" + $('#' + eleID).val() + "\">";
                 text += "<img src=\"https://static.divine-pride.net/images/items/item/" + $('#' + eleID).val() + ".png\">";
-                text += "<a href=\"https://www.divine-pride.net/database/item/" + $('#' + eleID).val() + "\">" + $('#' + eleID + ' option:selected').text() + "</a><br />";
+                text += "</a><br />";
+                //text += "<img src=\"https://static.divine-pride.net/images/items/item/" + $('#' + eleID).val() + ".png\">";
+                //text += "<a href=\"https://www.divine-pride.net/database/item/" + $('#' + eleID).val() + "\">" + $('#' + eleID + ' option:selected').text() + "</a><br />";
             } else
                 text += jsonEquipmentList[k].Label + "<br />";
 
 
             for (var j = 0; j < jsonEquipmentList[k].CardSlots; j++) {
-                if ($('#' + eleID + "_card" + j).val() && $('#' + eleID + "_card" + j).val() != 0)
-                    text += "<a href=\"https://www.divine-pride.net/database/item/" + $('#' + eleID + "_card" + j).val() + "\">" + "Card" + (j + 1) + " " + "</a>";
+                if ($('#' + eleID + "_card" + j).val() && $('#' + eleID + "_card" + j).val() != 0) {
+                    text += "<a href=\"https://www.divine-pride.net/database/item/" + $('#' + eleID + "_card" + j).val() + "\">";
+                    text += "<img src=\"https://static.divine-pride.net/images/items/item/" + $('#' + eleID + "_card" + j).val() + ".png\">";
+                    text += "</a>";
+                    //text += "<a href=\"https://www.divine-pride.net/database/item/" + $('#' + eleID + "_card" + j).val() + "\">" + "Card" + (j + 1) + " " + "</a>";
+                }
             }
             //console.log('#' + eleID + "_link " + text);
             $('#' + eleID + "_link").html(text);
         });
-
     });
-
 }
+
 
 function setupWeaponListSwitch() {
 
     $("#Left_Hand_type,#Right_Hand_type").change(function() {
-
-        //console.log(this.id + ' changed');
 
         if (objEquipItemDB.length < 1) return;
 
@@ -313,8 +254,6 @@ function setupWeaponListSwitch() {
                 if ($('#' + this.id).val() == objEquipItemDB[i][3] || ($('#' + this.id).val() == "Shield" && objEquipItemDB[i][6] == eleID))
                     $('<option/>').val(objEquipItemDB[i][0]).html(objEquipItemDB[i][1]).appendTo('#' + eleID);
             }
-
-
         }
 
         if (this.id == "Left_Hand_type") {
@@ -355,7 +294,6 @@ function setupWeaponListSwitch() {
                     $(o).text(arr[i].t);
                 });
             }
-
         }
 
         var options = $('#' + eleID + ' option');
@@ -367,10 +305,9 @@ function setupWeaponListSwitch() {
         });
 
         $("#" + eleID).trigger("change");
-
     });
-
 }
+
 
 function setupScriptsEquipped() {
 
@@ -386,7 +323,9 @@ function setupScriptsEquipped() {
                     break;
                 }
             }
+            calculateScriptBonus();
             updateScriptsinUI();
+            refreshAll();
         });
     });
 
@@ -403,66 +342,10 @@ function setupScriptsEquipped() {
                         break;
                     }
                 }
+                calculateScriptBonus();
                 updateScriptsinUI();
+                refreshAll();
             });
         }
     });
-
-
-}
-
-function updateScriptsinUI() {
-    var content = "";
-    $.each(objScriptsEquipped, function(val, text) {
-        content += '<br>' + val + ": " + text;
-    });
-    $('#allscripts').html(content);
-
-    calculateScriptBonus();
-}
-
-function calculateScriptBonus() {
-
-    var lexer = new Lexer();
-    var parser = null;
-    var evaluator = null;
-
-    jsonActiveScripts = {};
-
-    $.each(objScriptsEquipped, function(val, text) {
-
-        var id = -1;
-        for (var i = 0; i < 10; i++)
-            if (jsonEquipmentList[i].Name == val) {
-                id = i;
-                break;
-            }
-
-        text = simplify_script(text, id);
-
-        lexer.tokenize(text);
-        parser = new Parser(lexer.lexlist, "SEMICOLON");
-        parser.parse();
-        evaluator = new Evaluator(parser.p);
-        evaluator.evaluate();
-    });
-
-
-    /*
-        if (objScriptsEquipped['Head_Top'] && objScriptsEquipped['Head_Top'] != "") {
-
-            const lexer = new Lexer();
-            lexer.tokenize(objScriptsEquipped['Head_Top']);
-            //console.log(lexer.lexlist);
-
-            const parser = new Parser(lexer.lexlist, "SEMICOLON");
-            parser.parse();
-
-            const evaluator = new Evaluator(parser.p);
-            evaluator.evaluate();
-            console.log(evaluator.data);
-
-        }
-    */
-
 }

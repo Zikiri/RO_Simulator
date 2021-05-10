@@ -16,7 +16,7 @@ var teststring = 'bonus2 bSubClass,Class_Normal,-10;bonus2 bAddClass,Class_Boss,
 
 
 // All applicable scripts held in this object
-var jsonActiveScripts = {};
+var jsonActiveScripts = JSON.parse(JSON.stringify(jsonActiveScriptsTemplate));
 
 class Token {
     constructor(type, value) {
@@ -357,6 +357,7 @@ function simplify_script(script, equip_id) {
     script = script.replaceAll('.@r', objRefineLvls[equip_id]);
     script = script.replaceAll(/eaclass\(\)/ig, nClass_eA);
 
+    script = script.replaceAll("bonus2 bVariableCastrate", "bonus2 bSkillVariableCastrate"); //bVariableCastrate appears for both bonus & bonus2. replaced with bSkillVariableCastrate to avoid ambiguity in json
 
 
     script = script.replaceAll(/BaseClass/ig, nBaseClass);
@@ -412,6 +413,9 @@ class Evaluator {
                 case "if":
                     this.eval_if(node);
                     break;
+                case "skill":
+                    this.eval_skill(node);
+                    break;
                 default:
                     console.log("node not evaluated: " + node.type + " " + node.value);
 
@@ -422,49 +426,97 @@ class Evaluator {
     eval_bonus(node) {
         if (!node.arg1)
             jsonActiveScripts[node.arg0] = "true";
-        else {
-            var val = 0;
-            if ( /*isNumeric(node.arg1) ||*/ node.arg0 == 'bAtkEle') val = node.arg1;
-            else val = this.eval_math_expr(node.arg1);
 
-            if (!jsonActiveScripts[node.arg0]) jsonActiveScripts[node.arg0] = val;
-            else jsonActiveScripts[node.arg0] += val;
+        else if (node.arg0 == 'bAllStats') {
+            for (var i = 0; i < 6; i++) {
+                var val = this.eval_math_expr(node.arg1);
+                jsonActiveScripts[jsonPrimaryStatList[i]] += val;
+            }
+
+        } else if (node.arg0 == 'bAgiVit') {
+            jsonActiveScripts['bAgi'] += val;
+            jsonActiveScripts['bVit'] += val;
+
+        } else if (node.arg0 == 'bAgiDexStr') {
+            jsonActiveScripts['bAgi'] += val;
+            jsonActiveScripts['bDex'] += val;
+            jsonActiveScripts['bStr'] += val;
+
+        } else if (node.arg0 == 'bAtkEle') {
+            jsonActiveScripts[node.arg0] = node.arg1;
+
+        } else if (node.arg0 == 'bIgnoreDefClass' || node.arg0 == 'bIgnoreDefRace') {
+            jsonActiveScripts[node.arg0][node.arg1] = "true";
+
+        } else {
+            var val = 0;
+            /* if (node.arg0 == 'bIgnoreDefClass' || node.arg0 == 'bIgnoreDefRace') val = node.arg1;
+            else */
+            val = this.eval_math_expr(node.arg1);
+            jsonActiveScripts[node.arg0] += val;
         }
     }
 
     eval_bonus2(node) {
         var val = 0;
 
-        if (node.arg0 == 'bAddEff2') val = 'Adds a ' + (node.arg2 / 100) + '% chance of inflicting ' + node.arg1 + ' on the user when performing a physical attack.';
-        else if (node.arg0 == 'bAddEff') val = 'Adds a ' + (node.arg2 / 100) + '% chance of inflicting ' + node.arg1 + ' on the target when performing a physical attack.';
+        switch (node.arg0) {
 
-        else if (node.arg0 == 'bSubClass' || node.arg0 == 'bAddClass' || node.arg0 == 'bSubRace' || node.arg0 == 'bAddRace' || node.arg0 == 'bIgnoreDefRaceRate') {
+            case 'bAddEff':
+                val = 'Adds a ' + (node.arg2 / 100) + '% chance of inflicting ' + node.arg1 + ' on the target when performing a physical attack.';
+                if (!jsonActiveScripts[node.arg0]) jsonActiveScripts[node.arg0] = [val];
+                else jsonActiveScripts[node.arg0] = jsonActiveScripts[node.arg0].concat([val]);
+                break;
 
-            node.arg2 = this.eval_math_expr(node.arg2);
-            val = JSON.parse('{"' + node.arg1 + '":"' + node.arg2 + '"}');
-        } else if (node.arg0 == 'bSkillAtk') val = 'Increase damage of ' + node.arg1 + ' by ' + node.arg2 + '%';
+            case 'bAddEff2':
+                val = 'Adds a ' + (node.arg2 / 100) + '% chance of inflicting ' + node.arg1 + ' on the user when performing a physical attack.';
+                if (!jsonActiveScripts[node.arg0]) jsonActiveScripts[node.arg0] = [val];
+                else jsonActiveScripts[node.arg0] = jsonActiveScripts[node.arg0].concat([val]);
+                break;
 
-        else console.log('error bonus2 not evaluated ' + node.arg0);
+            case 'bSubClass':
+            case 'bAddClass':
+            case 'bSubRace':
+            case 'bAddRace':
+            case 'bSubEle':
+            case 'bAddSize':
+            case 'bSubSize':
+            case 'bIgnoreDefRaceRate':
+            case 'bMagicAddSize':
+            case 'bMagicAtkEle':
+            case 'bSkillAtk':
+            case 'bResEff':
+            case 'bHPRegenRate':
+            case 'bSPRegenRate':
+            case 'bHPLossRate':
+            case 'bSPLossRate':
+                node.arg2 = this.eval_math_expr(node.arg2);
+                if (jsonActiveScripts[node.arg0] && jsonActiveScripts[node.arg0][node.arg1])
+                    jsonActiveScripts[node.arg0][node.arg1] += parseInt(node.arg2);
+                else if (jsonActiveScripts[node.arg0])
+                    jsonActiveScripts[node.arg0][node.arg1] = parseInt(node.arg2);
+                else {
+                    jsonActiveScripts[node.arg0] = JSON.parse('{"' + node.arg1 + '":' + parseInt(node.arg2) + '}');
+                }
+                break;
 
-        if (!jsonActiveScripts[node.arg0]) jsonActiveScripts[node.arg0] = [val];
-        else jsonActiveScripts[node.arg0] = jsonActiveScripts[node.arg0].concat([val]);
+            default:
+                console.log("eval_bonus2 failed for " + node.arg0 + " " + node.arg1 + " " + node.arg2);
 
+        }
     }
 
     eval_bonus3(node) {
         var val = 0;
-        if (node.arg0 == 'bAutoSpell') val = 'Adds a ' + (node.arg3 / 100) + '% chance of casting Level 1 ' + node.arg1 + ' on the user when performing a physical attack, if a higher level of this skill is known, it will be cast instead.';
+        if (node.arg0 == 'bAutoSpell') val = 'Adds a ' + (node.arg3 / 100) + '% chance of casting Level ' + node.arg2 + ' ' + node.arg1 + ' on the user when performing a physical attack, if a higher level of this skill is known, it will be cast instead.';
         else if (node.arg0 == 'bSPVanishRate') val = 'Adds a ' + (node.arg1 / 10) + '% chance to drain ' + node.arg2 + '% SP from the target when performing a physical attack.';
-
+        else if (node.arg0 == "bAddMonsterDropItem") val = 'Adds a ' + (node.arg3 / 100) + '% chance of gaining ItemID:' + node.arg1 + ' when a ' + node.arg2 + ' race monster is killed';
 
         if (!jsonActiveScripts[node.arg0]) jsonActiveScripts[node.arg0] = [val];
         else jsonActiveScripts[node.arg0] = jsonActiveScripts[node.arg0].concat([val]);
     }
 
     eval_autobonus(node) {
-
-        //autobonus "{ bonus bCritical,100; bonus bBaseAtk,50; }",1,5000,0,"{ specialeffect2 EF_FIRESPLASHHIT; }"
-
         var val = 0;
         val = 'Has a ' + (node.arg1 / 10.0) + '% chance of activating an effect for ' + (node.arg2 / 1000) + ' seconds while dealing physical damage: ' + node.arg0;
 
@@ -479,15 +531,15 @@ class Evaluator {
         expr = expr.replaceAll("max", "Math.max");
         expr = expr.replaceAll("(", "Math.floor(");
         expr = "Math.floor(" + expr + ")";
-
+        console.log("expr before eval " + expr);
         expr = eval(expr);
         return expr;
     }
 
     eval_if(node) {
-        console.log("eval_if called");
+        //console.log("eval_if called");
         if (eval(node.expression)) {
-            console.log("eval_if true section called");
+            //console.log("eval_if true section called");
             while (node.iftrue.length > 0) {
                 //console.log(node.iftrue.shift());
                 this.eval_node(node.iftrue.shift());
@@ -497,6 +549,12 @@ class Evaluator {
                 this.eval_node(node.iffalse.shift());
             }
         }
+    }
+
+    eval_skill(node) {
+        console.log("skills not currently added to activescripts " + node.arg0 + " " + node.arg1);
+        // paceholder for future implementation if needed
+        // since skill usage is not in current scope of simulation
     }
 }
 
@@ -511,7 +569,7 @@ function isNumeric(value) {
 //var abc = 'if (readparam(bLuk)>=90) {    bonus bBaseAtk,20; } if (readparam(bDex)>=90) {    bonus bCritical,5; } if (readparam(bDex)>=90 && readparam(bLuk)>=90) {    bonus2 bSkillAtk,"MC_MAMMONITE",15; }';
 //console.log('logging abc');
 //console.log(simplify_script(abc, 0));
-
+/*
 teststring = simplify_script(teststring, 0);
 console.log('logging teststring simplified');
 console.log(teststring);
@@ -532,87 +590,15 @@ console.log(JSON.stringify(jsonActiveScripts));
 //----------------------------------
 //Notes
 /*
-bStr
-bAgi
-bVit
-bInt
-bDex
-bLuk
-bAllStats
-bFlee
-bFlee2: perfect dodge
-bMaxHPrate: max hp % mod
-bMaxSPrate: max sp % mod
-bHPrecovRate: reduce hp recovery by x%
-bSPrecovRate: reduce sp recovery by x%
-bHPRegenRate: recover x hp every y/1000 secs
-bHPDrainRate: HP steal
-bHPLossRate: x hp loss every y seconds
-bSPLossRate: x sp loss every y seconds
-bSPDrainValue: gain x sp every atk (value is in negative for immaterial sword where its a loss, moonlight dagger has positive value)
-bSPVanishRate: remove sp % from target (check immaterial sword)
-bDefRate
-bDef2Rate
-bCritical: add %critrate
-bCritAtkRate: add %critdmg
-bAspdRate: add %aspd
-bAddEff: chance for status on monster during physical atk
-bAddEff2: chance for status on user during physical atk
-skill: allow use of skill
-bAutoSpell: autocast spell during physical atk at a certain chance
-bAtkEle: weapon attack element
-bAddRace: increase dmg% against certain race
-bSubRace: decrease dmg% taken from certain race
-bAddEle: increase dmg% against certain element
-bAddClass: increase dmg% against certain class of monster (eg boss type)
-bSubClass: decrease dmg% taken from certain class of monster
-bIgnoreDefRace: 1 argument for race. ignore 100% def for the race
-bIgnoreDefRaceRate: ignore x% of def for monster race
-bAddMonsterDropItemGroup: drop items from a certain item group on kill
-bAddMonsterDropItem: drop a certain item on kill
-specialeffect2: special effect on player(probably) can be ignored
-bBreakArmorRate: armor break chance
-bDefRatioAtkClass: ice pick effect
-bClassChange: transform monster (Azoth weapon-dagger)
-bUnbreakableWeapon
-bGetZenyNum: get zeny from 1-x amt at y% (zeny knife)
-bSkillAtk: add % dmg to a skill
-bVariableCastrate: reduce variable cast time by x%. negative = decrease
-bLongAtkDef
-
-
 Races: RC_DemiHuman, RC_Player_Human, RC_Plant, RC_Demon
 Elements: Ele_Holy, Ele_Dark, Ele_Fire, Ele_Earth, Ele_Wind, Ele_Water, Ele_Poison, Ele_Undead
 Classes: Class_All
 Effects: Eff_Poison, Eff_Curse, Eff_Freeze, Eff_Blind, Eff_Silence, Eff_Sleep, Eff_Bleeding
-bAutoSpell: NPC_CRITICALWOUND (Wild Beast Claw), NPC_DRAGONFEAR (Inverse Scale), ST_FULLSTRIP (Drill katar), NPC_WIDEBLEEDING (Blood Tears), AS_SONICBLOW
-BaseClass: 
-    Job_Swordman
-    Job_Thief
-    Job_Merchant
-    Job_Archer
-    Job_Mage
-    Job_Acolyte
-    Job_Gunslinger
-    Job_Ninja
-    Job_Taekwon
-BaseJob:
-    Job_Novice
-    Job_SuperNovice
-    Job_Soul_Linker
-    Job_Summoner
 
-
-for simplification: 
-done readparam(bStr)
-done JobLevel
-done BaseLevel
-getrefine()
-eaclass() -> should be returning the job id
-EAJL_THIRD -> check if job is 3rd job. usage: eaclass()&EAJL_THIRD
-eaclass()&EAJL_THIRD -> probably better to replace with true/false or 1/0 if class is 3rd or not
-getskilllv("SM_BASH") or any other skill. fix it to max lvl 10
-BaseJob == Job_Assassin
+pending for simplification: 
 .@delay += 3;
 bonus bDelayrate,-.@delay;
+
+pending for evaluation:
+ if (getiteminfo(getequipid(EQI_HAND_R), II_VIEW) == W_BOW)
 */
