@@ -16,11 +16,6 @@ $(function() {
         }
         console.log('key pressed');
     });
-
-    /*$('input,select').change(function() {
-        console.log('input/select changed');
-        refreshAll();
-    });*/
 });
 
 
@@ -38,33 +33,33 @@ function updateJobBonusStatData() {
 
 function updateTotalStatsData() {
     for (var i = 0; i < 6; i++)
-        objTotalStats[i] = objBaseStats[i] + objJobBonusStats[i] + objEquipBonusStats[i];
+        objTotalStats[i] = objBaseStats[i] + objJobBonusStats[i] + jsonActiveScripts[jsonPrimaryStatList[i]] // objEquipBonusStats[i];
 }
 
 function calculateSubStats() {
-    objSubStats[0] = StatusAtk(nBaseLvl, objTotalStats);
-    objSubStats[1] = WeaponAtk();
+    objSubStats[0] = StatusAtk(nBaseLvl, objTotalStats, strRHType);
+    objSubStats[1] = WeaponAtk(objEquipData, objRefineLvls, jsonActiveScripts);
     objSubStats[2] = StatusMatk(nBaseLvl, objTotalStats);
     objSubStats[3] = WeaponMatk();
     objSubStats[4] = SoftDef(nBaseLvl, objTotalStats);
     objSubStats[5] = HardDef();
     objSubStats[6] = SoftMdef(nBaseLvl, objTotalStats);
     objSubStats[7] = HardMdef();
-    objSubStats[8] = TotalHit(nBaseLvl, objTotalStats, 0); // bonus hit pending
-    objSubStats[9] = TotalCritRate(objTotalStats, 0); // bonus crit pending
-    objSubStats[10] = TotalFlee(nBaseLvl, objTotalStats, 0); // bonus flee pending
-    objSubStats[11] = TotalPerfectDodge(objTotalStats, 0); // bonus PD pending
+    objSubStats[8] = TotalHit(nBaseLvl, objTotalStats, jsonActiveScripts['bHit']);
+    objSubStats[9] = TotalCritRate(objTotalStats, jsonActiveScripts['bCritical']);
+    objSubStats[10] = TotalFlee(nBaseLvl, objTotalStats, jsonActiveScripts['bFlee']);
+    objSubStats[11] = TotalPerfectDodge(objTotalStats, jsonActiveScripts['bFlee2']);
     objSubStats[12] = TotalAspd(nClass, objTotalStats, strRHType);
-    objSubStats[13] = MaxHP(nClass, nBaseLvl, objTotalStats, 0, 0);
-    objSubStats[14] = MaxSP(nClass, nBaseLvl, objTotalStats, 0, 0);
-    objSubStats[15] = 0;
+    objSubStats[13] = MaxHP(nClass, nBaseLvl, objTotalStats, jsonActiveScripts['bMaxHP'], jsonActiveScripts['bMaxHPrate']);
+    objSubStats[14] = MaxSP(nClass, nBaseLvl, objTotalStats, jsonActiveScripts['bMaxSP'], jsonActiveScripts['bMaxSPrate']);
+    objSubStats[15] = WeightLimit();
     objSubStats[16] = PendingStatPoints(nBaseLvl, nClass, objBaseStats);
 }
 
 function refreshUIValues() {
     //job+equipment bonus stats
     for (var i = 0; i < 6; i++) {
-        $('#addStat' + i).html(objJobBonusStats[i] + objEquipBonusStats[i]);
+        $('#addStat' + i).html(objJobBonusStats[i] + jsonActiveScripts[jsonPrimaryStatList[i]]);
         $('#reqdStat' + i).html(NextStatPointCost(objBaseStats[i]));
     }
     //sub stats
@@ -74,8 +69,9 @@ function refreshUIValues() {
 
 function updateScriptsinUI() {
     var content = "";
-    $.each(objScriptsEquipped, function(val, text) {
-        if (text) content += '<br>' + val + ": " + text;
+    $.each(objEquipData, function(val, text) {
+        //    $.each(objScriptsEquipped, function(val, text) {
+        if (text && text[10]) content += '<br>' + val + ": " + text[10];
     });
     $('#allscripts').html(content);
 }
@@ -89,8 +85,8 @@ function calculateScriptBonus() {
     //jsonActiveScripts = {};
     jsonActiveScripts = JSON.parse(JSON.stringify(jsonActiveScriptsTemplate));
 
-    $.each(objScriptsEquipped, function(val, text) {
-
+    $.each(objEquipData, function(val, text) {
+        //$.each(objScriptsEquipped, function(val, text) {
         var id = -1;
         for (var i = 0; i < 10; i++)
             if (jsonEquipmentList[i].Name == val) {
@@ -98,15 +94,19 @@ function calculateScriptBonus() {
                 break;
             }
 
-        text = simplify_script(text, id);
+        if (text[10]) {
+            var temp = JSON.parse(JSON.stringify(text[10])); // need to create copy so that the original script is preserved and not modified in subsequent calculations
+            //console.log("passed id " + id);
+            temp = simplify_script(temp, id);
 
-        //console.log("simplified script ");
-        //console.log(text);
+            //console.log("simplified script ");
+            //console.log(temp);
 
-        lexer.tokenize(text);
-        parser = new Parser(lexer.lexlist, "SEMICOLON");
-        parser.parse();
-        evaluator = new Evaluator(parser.p);
-        evaluator.evaluate();
+            lexer.tokenize(temp);
+            parser = new Parser(lexer.lexlist, "SEMICOLON");
+            parser.parse();
+            evaluator = new Evaluator(parser.p);
+            evaluator.evaluate();
+        }
     });
 }

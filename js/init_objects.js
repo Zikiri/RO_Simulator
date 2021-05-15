@@ -1,9 +1,5 @@
 // Initialise objects and values on UI
 
-
-
-
-
 function initialiseObjects() {
 
     // Object initialisation to fetch  base hp and sp values
@@ -38,11 +34,23 @@ function initialiseObjects() {
     $.get(path_job_base_aspd, function(data) {
 
         var lines = data.replace(/ /g, "").split("\n");
-        objAspdTable = [];
+        objAspdTable = {};
         for (var i = 0; i < lines.length; i++) {
             if (lines[i].startsWith("//") || lines[i] === "")
                 continue;
-            objAspdTable.push(lines[i].split(","));
+
+            var temp = lines[i].replaceAll("\t", "").split(",");
+            //console.log(temp);
+            objAspdTable[temp[0]] = JSON.parse('{"Weight":' + parseInt(temp[1]) + '}');
+            objAspdTable[temp[0]]['HPFactor'] = parseInt(temp[2]);
+            objAspdTable[temp[0]]['HPMultiplicator'] = parseInt(temp[3]);
+            objAspdTable[temp[0]]['SPFactor'] = parseInt(temp[4]);
+
+            var j = 5;
+            $.each(jsonWeaponTypeList, function(val, text) {
+                objAspdTable[temp[0]][val] = parseInt(temp[j]);
+                j++;
+            });
         }
         console.log("path_job_base_aspd file loaded");
         loadcount--;
@@ -50,7 +58,7 @@ function initialiseObjects() {
     });
 
     // Object initialisation to fetch all equips and details from rAthena file
-    // 0:ID,1:Name,2:Type,3:SubType,4:Attack/def,5:Slots,6:Location,7:WeaponLvl,8:EquipLevelMin,9:Refineable,10:Script
+    // 0:ID,1:Name,2:Type,3:SubType,4:Attack/def,5:Slots,6:Location,7:WeaponLvl,8:EquipLevelMin,9:Refineable,10:Script,11:MagicAttack
     $.get(path_item_db_equip, function(data) {
 
         objEquipItemDB = [];
@@ -87,6 +95,8 @@ function initialiseObjects() {
                 objItem[3] = lines[i].replace("    SubType: ", "");
             } else if (lines[i].startsWith("    Attack: ")) {
                 objItem[4] = lines[i].replace("    Attack: ", "");
+            } else if (lines[i].startsWith("    MagicAttack: ")) {
+                objItem[11] = lines[i].replace("    MagicAttack: ", "");
             } else if (lines[i].startsWith("    Defense: ")) {
                 objItem[4] = lines[i].replace("    Defense: ", "");
             } else if (lines[i].startsWith("    Slots: ")) {
@@ -131,7 +141,7 @@ function initialiseObjects() {
 
 
     // Object initialisation to fetch all cards and details from rAthena file
-    // 0:ID,1:Name,2:Type,3:Location,4:Script (pending implementation for script)
+    // 0:ID,1:Name,2:Type,6:Location,10:Script (pending implementation for script)
     $.get(path_item_db_etc, function(data) {
 
         objCardItemDB = [];
@@ -180,19 +190,19 @@ function initialiseObjects() {
             } else if (lines[i].startsWith("    Locations:")) {
 
                 if (lines[i + 1].startsWith("      Head_"))
-                    objItem[3] = "Head";
+                    objItem[6] = "Head";
                 else
-                    objItem[3] = lines[i + 1].replace(": true", "").trim();
+                    objItem[6] = lines[i + 1].replace(": true", "").trim();
 
             } else if (lines[i].startsWith("    Script: |")) {
 
-                objItem[4] = "";
+                objItem[10] = "";
                 for (var j = i + 1; j < lines.length; j++) {
                     if (lines[j].startsWith("  - Id: ")) {
                         i = j - 1;
                         break;
                     }
-                    objItem[4] += lines[j].trim() + "\n";
+                    objItem[10] += lines[j].trim() + "\n";
                     //console.log(lines[j]);
                 }
 
@@ -204,6 +214,4 @@ function initialiseObjects() {
         loadcount--;
         if (loadcount == 0) initSetup();
     });
-
-
 }

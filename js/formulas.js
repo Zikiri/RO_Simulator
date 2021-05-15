@@ -156,19 +156,39 @@ function TotalAspd(Class, totalStats, weaponType) {
     var val = 0.0;
     var index = Object.keys(jsonWeaponTypeList).indexOf(weaponType);
     var amotion;
-    for (var i = 0; i < objAspdTable.length; i++)
-        if (objAspdTable[i][0] == Class) {
-            amotion = objAspdTable[i][index + 5];
+
+    amotion = objAspdTable[Class][weaponType];
+    if (strLHType == "Shield") amotion += objAspdTable[Class]["Shield"];
+    else if (strLHType != "Unarmed")
+        amotion += Math.floor(objAspdTable[Class][strLHType] / 4);
+
+    // need to add part to modify amotion as per shield and dual weild
+    //console.log(amotion);
+    var temp_aspd = 0;
+    switch (strRHType) {
+        case "Bow":
+        case "Musical":
+        case "Whip":
+        case "Revolver":
+        case "Rifle":
+        case "Gatling":
+        case "Shotgun":
+        case "Grenade":
+            temp_aspd = totalStats[4] * totalStats[4] / 7.0 + totalStats[1] * totalStats[1] * 0.5;
             break;
-        }
-        // need to add part to modify amotion as per shield and dual weild
-        //console.log(amotion);
-    var temp_aspd = totalStats[4] * totalStats[4] / 5.0 + totalStats[1] * totalStats[1] * 0.5; // need modification for ranged weapons
+        default:
+            temp_aspd = totalStats[4] * totalStats[4] / 5.0 + totalStats[1] * totalStats[1] * 0.5;
+    }
+
     temp_aspd = (Math.sqrt(temp_aspd) * 0.25) + 196;
 
+    // pending section for aspd related skills
+
     amotion = parseInt((temp_aspd + 0 * totalStats[1] / 200) - Math.min(amotion, 200)); // need modification to add other aspd mods
-    //console.log(amotion);
-    return amotion;
+    //console.log("aspd1 " + amotion);
+    amotion = amotion + Math.round((nMaxAspd - amotion) * jsonActiveScripts['bAspdRate'] / 100) + jsonActiveScripts['bAspd'];
+    //console.log("aspd2 " + amotion);
+    return Math.min(Math.max(amotion, 0), nMaxAspd);
 }
 
 /*
@@ -241,38 +261,101 @@ function StatusMatk(baseLvl, totalStats) {
 }
 
 function WeaponMatk() {
-    return 0; // pending implementation
+    var val = 0
+    if (objEquipData['Right_Hand'] && objEquipData['Right_Hand'] != "" && objEquipData['Right_Hand'][11]) {
+        val += parseInt(objEquipData['Right_Hand'][11]); //base weapon atk
+        val += objRefineLvls[4] * Math.max(parseInt(objEquipData['Right_Hand'][7]) * 2 - 1, 2); // refine bonus
+    }
+    val += jsonActiveScripts['bMatk'];
+    //console.log("returned val for matk 1st" + val);
+    if (objEquipData['Left_Hand'] && objEquipData['Left_Hand'] != "" && objEquipData['Left_Hand'][2] == "Weapon" && objEquipData['Left_Hand'][11]) {
+        val += parseInt(objEquipData['Left_Hand'][4]); //base weapon atk
+        val += objRefineLvls[5] * Math.max(parseInt(objEquipData['Left_Hand'][7]) * 2 - 1, 2); // refine bonus
+    }
+    //console.log("returned val for matk" + val);
+    return val;
 }
 
 //-------------------------------------------------------------------------------
 // Mdef Calculation
 function HardMdef() {
-    return 0; // pending implementation
+    var val = 0;
+    val += jsonActiveScripts['bMdef'];
+    return val; // pending implementation
 }
 
 function SoftMdef(baseLvl, totalStats) {
     return Math.floor(totalStats[3] + (totalStats[2] / 5) + (totalStats[4] / 5) + (baseLvl / 4));
     //floor((INT + (VIT ÷ 5) + (DEX ÷ 5) + (BaseLv ÷ 4))
+    //pending addition of additive/multiplicative multipliers from angelus / divine protection
 }
 
 //-------------------------------------------------------------------------------
 // Atk calculation
-function StatusAtk(BaseLvl, totalStats) {
-    return Math.floor((BaseLvl / 4) + totalStats[0] + (totalStats[4] / 5) + (totalStats[5] / 3));
+function StatusAtk(BaseLvl, totalStats, weaponType) {
+    var val = 0;
+    if (weaponType == 'Bow' || weaponType == 'Musical' || weaponType == 'Whip' || weaponType == 'Revolver' || weaponType == 'Rifle' || weaponType == 'Gatling' || weaponType == 'Shotgun' || weaponType == 'Grenade')
+        val = Math.floor((BaseLvl / 4) + (totalStats[0] / 5) + totalStats[4] + (totalStats[5] / 3));
+    val = Math.floor((BaseLvl / 4) + totalStats[0] + (totalStats[4] / 5) + (totalStats[5] / 3));
     //StatusATK = floor[(BaseLevel ÷ 4) + Str + (Dex ÷ 5) + (Luk ÷ 3)]
+    return Math.max(val, 0);
 }
 
 function WeaponAtk() {
-    return 0;
+    var val = 0
+    if (objEquipData['Right_Hand'] && objEquipData['Right_Hand'] != "") {
+        val += parseInt(objEquipData['Right_Hand'][4]); //base weapon atk
+        val += objRefineLvls[4] * Math.max(parseInt(objEquipData['Right_Hand'][7]) * 2 - 1, 2); // refine bonus
+    }
+    val += jsonActiveScripts['bBaseAtk'];
+
+    if (objEquipData['Left_Hand'] && objEquipData['Left_Hand'] != "" && objEquipData['Left_Hand'][2] == "Weapon") {
+        val += parseInt(objEquipData['Left_Hand'][4]); //base weapon atk
+        val += objRefineLvls[5] * Math.max(parseInt(objEquipData['Left_Hand'][7]) * 2 - 1, 2); // refine bonus
+    }
+
+    return val;
 }
 
 //-------------------------------------------------------------------------------
 // Def calculation
 function HardDef() {
-    return 0; // pending implementation
+    var val = 0;
+
+    //raw def fom armor
+    $.each(objEquipData, function(id, text) {
+        if (text[2] == "Armor" && text[4]) val += parseInt(text[4]);
+    });
+    //console.log("val 1hardef " + val);
+    //def from refine
+    for (var i = 0; i < 10; i++) {
+        if ((i != 4 && i != 5) || (i == 5 && strLHType == "Shield"))
+            val += jsonRefineDefBonus[objRefineLvls[i]];
+    }
+    //console.log("val 2hardef " + val);
+    //def from scripts
+    val += jsonActiveScripts['bDef'];
+    //console.log("val 3hardef " + val);
+
+    val = Math.floor(val * (1 + jsonActiveScripts['bDefRate'] / 100));
+    return val;
 }
 
 function SoftDef(BaseLvl, totalStats) {
-    return Math.floor((totalStats[2] / 2) + (totalStats[1] / 5) + (BaseLvl / 2));
+    var val = Math.floor((totalStats[2] / 2) + (totalStats[1] / 5) + (BaseLvl / 2));
     //SoftDEF      = floor((VIT ÷ 2) + (AGI ÷ 5) + (BaseLv ÷ 2))
+
+    val = Math.floor(val * (1 + jsonActiveScripts['bDef2Rate'] / 100));
+
+    return val;
+}
+
+function WeightLimit() {
+    var MAX_WGT = 0;
+    MAX_WGT += objAspdTable[nClass]['Weight'] / 10;
+    MAX_WGT += 30 * objBaseStats[0];
+
+    // skill bonuses pending
+
+    return MAX_WGT;
 }

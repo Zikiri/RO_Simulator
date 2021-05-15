@@ -1,6 +1,7 @@
 // Functions dealing with inital setup on first load
 
 function initSetup() {
+
     setupClassList();
     setupEquipmentTable();
     setupListWeaponType();
@@ -9,7 +10,6 @@ function initSetup() {
     setupEquipmentLinks();
     setupWeaponListSwitch();
     setupScriptsEquipped();
-    refreshAll();
 
     $('#Class').change(function() {
         console.log('Class changed');
@@ -57,6 +57,17 @@ function initSetup() {
         calculateScriptBonus();
         refreshAll();
     });
+
+    $("#Class").trigger("change");
+    $("#BaseLvl").trigger("change");
+    $("#baseStat0").trigger("change");
+
+    updateJobBonusStatData();
+    calculateScriptBonus();
+
+    refreshAll();
+
+
 }
 
 
@@ -161,7 +172,7 @@ function setupCardLists() {
 
             for (j = 0; j < objCardItemDB.length; j++) {
 
-                if ((objCardItemDB[j][3] == text.Name) || (objCardItemDB[j][3] == "Both_Accessory" && text.Name.includes("Accessory")) || (text.Name.substring(0, 4) == objCardItemDB[j][3]))
+                if ((objCardItemDB[j][6] == text.Name) || (objCardItemDB[j][6] == "Both_Accessory" && text.Name.includes("Accessory")) || (text.Name.substring(0, 4) == objCardItemDB[j][6]))
                     $('<option/>').val(objCardItemDB[j][0]).html(objCardItemDB[j][1]).appendTo('#' + text.Name + '_card' + i);
                 //else if (objCardItemDB[j][1] == "Willow Card") console.log("error debug " + objCardItemDB[j][3] + " " + text.Name.substring(0, 4));
             }
@@ -235,6 +246,9 @@ function setupEquipmentLinks() {
 function setupWeaponListSwitch() {
 
     $("#Left_Hand_type,#Right_Hand_type").change(function() {
+
+        if (this.id == "Right_Hand_type") strRHType = $('#' + this.id).val();
+        else strLHType = $('#' + this.id).val();
 
         if (objEquipItemDB.length < 1) return;
 
@@ -311,41 +325,31 @@ function setupWeaponListSwitch() {
 
 function setupScriptsEquipped() {
 
-    $.each(jsonEquipmentList, function(val, text) {
+    $('.equip').change(function() {
 
-        var eleEquiplist = "#" + text.Name;
-        $(eleEquiplist).change(function() {
-
-            objScriptsEquipped[this.id] = "";
-            for (var i = 0; i < objEquipItemDB.length; i++) {
-                if (objEquipItemDB[i][0] == this.value && objEquipItemDB[i][10]) {
-                    objScriptsEquipped[this.id] = objEquipItemDB[i][10];
-                    break;
-                }
+        objScriptsEquipped[this.id] = "";
+        objEquipData[this.id] = "";
+        for (var i = 0; i < objEquipItemDB.length; i++) {
+            if (objEquipItemDB[i][0] == this.value) {
+                objEquipData[this.id] = objEquipItemDB[i];
             }
-            calculateScriptBonus();
-            updateScriptsinUI();
-            refreshAll();
-        });
+        }
+        updateScriptsinUI();
+        refreshAll();
     });
 
-    $.each(jsonEquipmentList, function(val, text) {
+    $('.card').change(function() {
 
-        for (var i = 0; i < text.CardSlots; i++) {
-            var eleCardList = '#' + text.Name + '_card' + i;
-            $(eleCardList).change(function() {
-
-                objScriptsEquipped[this.id] = "";
-                for (var i = 0; i < objCardItemDB.length; i++) {
-                    if (objCardItemDB[i][0] == this.value && objCardItemDB[i][4]) {
-                        objScriptsEquipped[this.id] = objCardItemDB[i][4];
-                        break;
-                    }
-                }
-                calculateScriptBonus();
-                updateScriptsinUI();
-                refreshAll();
-            });
+        objScriptsEquipped[this.id] = "";
+        objEquipData[this.id] = "";
+        for (var i = 0; i < objCardItemDB.length; i++) {
+            if (objCardItemDB[i][0] == this.value) { // && objCardItemDB[i][10]) {
+                //objScriptsEquipped[this.id] = objCardItemDB[i][10];
+                objEquipData[this.id] = objCardItemDB[i];
+                break;
+            }
         }
+        updateScriptsinUI();
+        refreshAll();
     });
 }

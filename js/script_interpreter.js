@@ -352,9 +352,15 @@ function simplify_script(script, equip_id) {
     script = script.replaceAll(/JobLevel/ig, nJobLvl);
     script = script.replaceAll(/Baselevel/ig, nBaseLvl);
 
+    //console.log("inside simplify script refinevalue " + objRefineLvls[equip_id]);
+    //console.log("0 inside simplify script " + script);
     script = script.replaceAll(/getrefine\(\)/ig, objRefineLvls[equip_id]);
+    //console.log("1 inside simplify script " + script);
     script = script.replaceAll('.@r = ' + objRefineLvls[equip_id] + ';', '');
+    //console.log("2 inside simplify script " + script);
     script = script.replaceAll('.@r', objRefineLvls[equip_id]);
+    //console.log("3 inside simplify script " + script);
+
     script = script.replaceAll(/eaclass\(\)/ig, nClass_eA);
 
     script = script.replaceAll("bonus2 bVariableCastrate", "bonus2 bSkillVariableCastrate"); //bVariableCastrate appears for both bonus & bonus2. replaced with bSkillVariableCastrate to avoid ambiguity in json
@@ -470,8 +476,7 @@ class Evaluator {
 
             case 'bAddEff2':
                 val = 'Adds a ' + (node.arg2 / 100) + '% chance of inflicting ' + node.arg1 + ' on the user when performing a physical attack.';
-                if (!jsonActiveScripts[node.arg0]) jsonActiveScripts[node.arg0] = [val];
-                else jsonActiveScripts[node.arg0] = jsonActiveScripts[node.arg0].concat([val]);
+                jsonActiveScripts[node.arg0] = jsonActiveScripts[node.arg0].concat([val]);
                 break;
 
             case 'bSubClass':
@@ -483,6 +488,7 @@ class Evaluator {
             case 'bSubSize':
             case 'bIgnoreDefRaceRate':
             case 'bMagicAddSize':
+            case 'bMagicAddRace':
             case 'bMagicAtkEle':
             case 'bSkillAtk':
             case 'bResEff':
@@ -531,7 +537,7 @@ class Evaluator {
         expr = expr.replaceAll("max", "Math.max");
         expr = expr.replaceAll("(", "Math.floor(");
         expr = "Math.floor(" + expr + ")";
-        console.log("expr before eval " + expr);
+        //console.log("expr before eval " + expr);
         expr = eval(expr);
         return expr;
     }

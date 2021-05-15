@@ -1,7 +1,7 @@
 //Character specific variables
 var objBaseStats = [1, 1, 1, 1, 1, 1];
 var objJobBonusStats = [0, 0, 0, 0, 0, 0];
-var objEquipBonusStats = [0, 0, 0, 0, 0, 0];
+//var objEquipBonusStats = [0, 0, 0, 0, 0, 0];
 var objTotalStats = [1, 1, 1, 1, 1, 1];
 var objSubStats = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var nClass = 0;
@@ -14,12 +14,14 @@ var objRefineLvls = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var strRHType = "Unarmed";
 var strLHType = "Unarmed";
 var objScriptsEquipped = {};
+var objEquipData = {};
+var nMaxAspd = 193;
 
 //DB objects loaded from file
 var objJobBonusStatsTable = [];
 var objBaseHPSPTable = [];
 var objTotalStatValues = [];
-var objAspdTable = [];
+var objAspdTable = {};
 var objEquipItemDB = [];
 var objCardItemDB = [];
 //var objEquipScriptsDB = [];
@@ -752,169 +754,194 @@ var jsonActiveScriptsTemplate = {
     "bAllStats": 0,
     "bAgiVit": 0,
     "bAgiDexStr": 0,
-    "bMaxHP": 0,
-    "bMaxSP": 0,
-    "bMaxHPrate": 0,
-    "bMaxSPrate": 0,
+    "bMaxHP": 0, // MaxHP + n
+    "bMaxSP": 0, // MaxSP + n
+    "bMaxHPrate": 0, // MaxHP + n%
+    "bMaxSPrate": 0, // MaxSP + n%
     "bAtk": 0,
     "bAtk2": 0,
-    "bAtkRate": 0,
-    "bBaseAtk": 0,
+    "bAtkRate": 0, // Attack power + n%
+    "bBaseAtk": 0, // Equip Atk + n
+    "bMatk": 0,
     "bIntMatk": 0,
     "bMatkRate": 0,
     "bEquipmentMatk": 0,
-    "bDef": 0,
-    "bDef2": 0,
-    "bDefRate": 0,
-    "bDef2Rate": 0,
-    "bMdef": 0,
-    "bMdef2": 0,
-    "bMdefRate": 0,
-    "bMdef2Rate": 0,
-    "bHit": 0,
-    "bHitRate": 0,
-    "bCritical": 0,
-    "bCriticalRate": 0,
-    "bFlee": 0,
-    "bFleeRate": 0,
-    "bFlee2": 0,
-    "bFlee2Rate": 0,
-    "bSpeedRate": 0,
-    "bSpeedAddRate": 0,
-    "bAspd": 0,
-    "bAspdRate": 0,
-    "bAtkRange": 0,
-    "bCastrate": 0,
-    "bUseSPrate": 0,
-    "bHPrecovRate": 0,
-    "bSPrecovRate": 0,
-    "bDoubleRate": 0,
-    "bDoubleAddRate": 0,
-    "bPerfectHitRate": 0,
-    "bPerfectHitAddRate": 0,
-    "bCriticalDef": 0,
-    "bNearAtkDef": 0,
-    "bLongAtkDef": 0,
-    "bMagicAtkDef": 0,
-    "bMiscAtkDef": 0,
-    "bIgnoreDefRace": {},
-    "bIgnoreDefEle": 0,
-    "bIgnoreMDefRace": 0,
-    "bIgnoreMDefEle": 0,
-    "bIgnoreMdefRate": 0,
-    "bDefRatioAtkRace": 0,
-    "bDefRatioAtkEle": 0,
-    "bAtkEle": "",
-    "bDefEle": 0,
-    "bSplashRange": 0,
-    "bSplashAddRange": 0,
-    "bRestartFullRecover": 0,
-    "bNoCastCancel": 0,
-    "bNoCastCancel2": 0,
-    "bNoSizeFix": 0,
-    "bNoWeaponDamage": 0,
-    "bNoMagicDamage": 0,
-    "bNoGemStone": 0,
-    "bIntravision": 0,
-    "bHealPower": 0,
-    "bHealPower2": 0,
-    "bCritAtkRate": 0,
-    "bNoRegen": 0,
-    "bUnstripableWeapon": 0,
-    "bUnstripableArmor": 0,
-    "bUnstripableHelm": 0,
-    "bUnstripableShield": 0,
-    "bSPGainValue": 0,
-    "bHPGainValue": 0,
-    "bAddStealRate": 0,
-    "bHPDrainValue": 0,
-    "bSPDrainValue": 0,
-    "bAddItemHealRate": 0,
-    "bUnbreakableGarment": 0,
-    "bUnbreakableWeapon": 0,
-    "bUnbreakableArmor": 0,
-    "bUnbreakableHelm": 0,
-    "bUnbreakableShield": 0,
-    "bUnbreakableShoes": 0,
-    "bBreakWeaponRate": 0,
-    "bBreakArmorRate": 0,
-    "bUnbreakable": 0,
-    "bShortWeaponDamageReturn": 0,
-    "bLongWeaponDamageReturn": 0,
-    "bMagicDamageReturn": 0,
-    "bPerfectHide": 0,
-    "bNoKnockback": 0,
-    "bClassChange": 0,
-    "bNoMiscDamage": 0,
-    "bLongAtkRate": 0,
-    "bUnstripable": 0,
-    "bMagicSPGainValue": 0,
-    "bMagicHPGainValue": 0,
-    "bFixedCastrate": 0,
-    "bVariableCastrate": 0,
+    "bDef": 0, // Equipment DEF + n
+    "bDef2": 0, // VIT based DEF + n
+    "bDefRate": 0, // Equipment DEF + n%
+    "bDef2Rate": 0, // VIT based DEF + n%
+    "bMdef": 0, // Equipment MDEF + n
+    "bMdef2": 0, // INT based MDEF + n
+    "bMdefRate": 0, // Equipment MDEF + n%
+    "bMdef2Rate": 0, // INT based MDEF + n%
+    "bHit": 0, //Hit + n
+    "bHitRate": 0, // Hit + n%
+    "bCritical": 0, // Critical + n
+    "bCriticalRate": 0, // Critical + n%
+    "bCritAtkRate": 0, // Increase critical damage by +n%
+    "bFlee": 0, // Flee + n
+    "bFleeRate": 0, // Flee + n%
+    "bFlee2": 0, // Perfect Dodge + n
+    "bFlee2Rate": 0, // Perfect Dodge + n%
+    "bSpeedRate": 0, // Moving speed + n% (only the highest among all is applied)
+    "bSpeedAddRate": 0, // Moving speed + n%
+    "bAspd": 0, // Attack speed + n
+    "bAspdRate": 0, //Attack speed + n%
+    "bAtkRange": 0, // Attack range + n
+    "bCastrate": 0, // Skill casting time rate + n%
+    "bUseSPrate": 0, // SP consumption + n%
+    "bHPrecovRate": 0, // Natural HP recovery ratio + n%
+    "bSPrecovRate": 0, // Natural SP recovery ratio + n%
+    "bDoubleRate": 0, // Double Attack probability n% (works with all weapons | only the highest among all is applied)
+    "bDoubleAddRate": 0, // Double Attack probability + n% (works with all weapons)
+    "bPerfectHitRate": 0, // On-target impact attack probability n% (only the highest among all is applied)
+    "bPerfectHitAddRate": 0, // On-target impact attack probability + n%
+    "bCriticalDef": 0, // Critical ? and others the trap it is, probability + n%
+    "bNearAtkDef": 0, // Adds n% damage reduction against melee physical attacks
+    "bLongAtkDef": 0, // Adds n% damage reduction against ranged physical attacks
+    "bMagicAtkDef": 0, // Adds n% damage reduction against magical attacks
+    "bMiscAtkDef": 0, // Adds n% damage reduction against MISC attacks (traps, falcon, ...)
+    "bIgnoreDefRace": {}, // Disregard DEF against enemies of race n
+    "bIgnoreDefEle": 0, // Disregard DEF against enemies of element n
+    "bIgnoreMDefRace": 0, // Disregard MDEF against enemies of race n
+    "bIgnoreMDefEle": 0, // Disregard MDEF against enemies of element n
+    "bIgnoreMdefRate": 0, // Disregard n% of the target's MDEF
+    "bDefRatioAtkRace": 0, // Does more damage depending on monster Defense against race n (defense disregard)
+    "bDefRatioAtkEle": 0, // n attribute if defensive power is high the high extent big damage is given, (defense disregard)
+    "bAtkEle": "", //Gives the player's attacks element n
+    "bDefEle": "", // Gives the player's defense element n
+    "bSplashRange": 0, // Splash attack radius + n (e.g. n=1 makes a 3*3 cells area, n=2 a 5*5 area, etc)
+    "bSplashAddRange": 0, // Splash attack radius + n (e.g. n=1 makes a 3*3 cells area, n=2 a 5*5 area, etc)
+    "bRestartFullRecover": 0, // When reviving, HP and SP are fully healed (n is meaningless)
+    "bNoCastCancel": false, // Prevents casting from being interrupted when hit (does not work in GvG)
+    "bNoCastCancel2": false, // Prevents casting from being interrupted when hit (works even in GvG)
+    "bNoSizeFix": false, // The attack revision with the size of the monster is not received / drake card effect
+    "bNoWeaponDamage": 0, // Prevents from receiving n% physical damage
+    "bNoMagicDamage": 0, // Prevents from receiving n% magical effect (Attack, Healing, Support spells are all blocked) GTB effect
+    "bNoGemStone": false, // Skills requiring Gemstones do no require them (Hocus Pocus will still require 1 Yellow Gemstone)
+    "bIntravision": true, // Always see Hiding and Cloaking players/mobs
+    "bHealPower": 0, // Increase heal amount of all heal skills by n%
+    "bHealPower2": 0, // Increase heal amount if you are healed by any skills by n%
+    "bNoRegen": 0, // Stops regeneration for n: 1=HP, 2=SP
+    "bUnstripableWeapon": false, // Weapon cannot be taken off via Strip skills 
+    "bUnstripableArmor": false, // Armor cannot be taken off via Strip skills
+    "bUnstripableHelm": false, // Helm cannot be taken off via Strip skills
+    "bUnstripableShield": false, // Shield cannot be taken off via Strip skills
+    "bSPGainValue": 0, // When killing a monster by physical attack, you gain n SP
+    "bHPGainValue": 0, // When killing a monster by physical attack, you gain n HP
+    "bAddStealRate": 0, // n/100% increase to Steal skill success chance
+    "bHPDrainValue": 0, // Heals +n HP with normal attack.
+    "bSPDrainValue": 0, // When hitting a monster by physical attack, you gain n SP
+    "bAddItemHealRate": 0, // Increases HP recovered by x% for healing items
+    "bUnbreakableGarment": false, // Garment cannot be damaged/broken by any means
+    "bUnbreakableWeapon": false, // Weapon cannot be damaged/broken by any means
+    "bUnbreakableArmor": false, // Armor cannot be damaged/broken by any means
+    "bUnbreakableHelm": false, // Helm cannot be damaged/broken by any means
+    "bUnbreakableShield": false, // Shield cannot be damaged/broken by any means
+    "bUnbreakableShoes": false, // Shoes cannot be damaged/broken by any means
+    "bBreakWeaponRate": 0, // Adds a n/100% chance to break enemy's weapon while attacking (stacks with other break chances)
+    "bBreakArmorRate": 0, // Adds a n/100% chance to break enemy's armor while attacking (stacks with other break chances)
+    "bUnbreakable": 0, // Reduces the break chance of all equipped equipment by n%
+    "bShortWeaponDamageReturn": 0, // Reflects n% of received melee damage back to the enemy that caused it
+    "bLongWeaponDamageReturn": 0, // Reflects n% of received ranged damage back to the enemy that caused it
+    "bMagicDamageReturn": 0, // Adds a n% chance to reflect targetted magic spells back to the enemy that caused it
+    "bPerfectHide": false, // Hidden/cloaked character is no longer detected by monsters with 'detector' mode
+    "bNoKnockback": false, // Character is no longer knocked back by enemy skills with such effect
+    "bClassChange": 0, // Gives a n/100% chance to change the attacked monster's class with normal attack
+    "bNoMiscDamage": 0, // Adds n% reduction to received misc damage
+    "bLongAtkRate": 0, // Increases damage of ranged attacks by n%
+    "bUnstripable": false, // Armor cannot be taken off via strip skills
+    "bMagicSPGainValue": 0, // Heals +n SP when killing an enemy with magic attack
+    "bMagicHPGainValue": 0, // Heals +n HP when killing an enemy with magic attack
+    "bFixedCastrate": 0, // Increases fixed cast time of skills by x%
+    "bVariableCastrate": 0, // Increases variable cast time of skills by x%
     "bIgnoreDefClass": {},
 
-    "bAddEff": {},
-    "bResEff": {},
-    "bCastrate": {},
-    "bAddSize": {},
-    "bMagicAddSize": {},
-    "bSubSize": {},
-    "bAddRace": {},
-    "bMagicAddRace": {},
-    "bSubRace": {},
-    "bAddEle": {},
-    "bMagicAddEle": {},
-    "bSubEle": {},
-    "bAddDamageClass": {},
-    "bAddMagicDamageClass": {},
-    "bAddDefClass": {},
-    "bAddMDefClass": {},
-    "bIgnoreMdefRate": {},
-    "bHPDrainRate": {},
-    "bSPDrainRate": {},
-    "bSPVanishRate": {},
-    "bAddMonsterDropItem": [],
-    "bGetZenyNum": {},
-    "bAddGetZenyNum": {},
-    "bCriticalAddRace": {},
-    "bHPRegenRate": {},
-    "bHPLossRate": {},
-    "bAddEffWhenHit": {},
-    "bSkillAtk": {},
-    "bSkillHeal": {},
-    "bSkillHeal2": {},
-    "bAddRace2": {},
-    "bAddItemHealRate": {},
-    "bSPRegenRate": {},
-    "bSPLossRate": {},
-    "bExpAddRace": {},
-    "bSPGainRace": {},
-    "bSubRace2": {},
-    "bAddMonsterDropItemGroup": {},
-    "bWeaponComaRace": {},
-    "bAddSkillBlow": {},
-    "bIgnoreDefRate": {},
-    "bWeaponComaEle": {},
-    "bAddEff2": {},
-    "bWeaponAtk": {},
-    "bWeaponAtkRate": {},
-    "bHPDrainValueRace": {},
-    "bSPDrainValueRace": {},
-    "bHPGainRaceAttack": {},
-    "bSPGainRaceAttack": {},
-    "bSkillUseSPrate": {},
-    "bSkillUseSP": {},
-    "bSkillCooldown": {},
-    "bSkillFixedCast": {},
-    "bSkillVariableCast": {},
-    "bSkillVariableCastrate": {},
+    "bAddEff": [], // Adds a x/100 chance to cause effect e to the target when attacking
+    "bResEff": [], // Adds a x/100 tolerance to effect e
+    "bCastrate": {}, // Adjust casting time of skill n by x%
+    "bAddSize": {}, // +x% physical damage against size n
+    "bMagicAddSize": {}, // +x% magical damage against size n
+    "bSubSize": {}, // x% Damage reduction against size n
+    "bAddRace": {}, // +x% physical damage against race n
+    "bMagicAddRace": {}, // +x% magical damage against race n
+    "bSubRace": {}, // +x% damage reduction against race n
+    "bAddEle": {}, // +x% physical damage against element n
+    "bMagicAddEle": {}, // +x% magical damage against element n
+    "bSubEle": {}, // x% Damage reduction against element n
+    "bAddDamageClass": {}, // +x% extra physical damage against monsters of class n
+    "bAddMagicDamageClass": {}, // +x% extra magical damage against monsters of class n
+    "bAddDefClass": {}, // x% physical damage reduction against monsters of class n
+    "bAddMDefClass": {}, // x% magical damage reduction against monsters of class n
+    "bIgnoreMdefRate": {}, // Disregard x% of the target's MDEF if the target belongs to race n
+    "bHPDrainRate": {}, // n/10 % probability to drain x% HP when attacking
+    "bSPDrainRate": {}, // n/10 % probability to drain x% SP when attacking
+    "bSPVanishRate": {}, // Add the (n/10)% chance of decreasing enemy's SP (player) amount by x% when attacking
+    "bAddMonsterDropItem": [], // Adds a x/100% chance for item n to be dropped, when killing any monster.
+    "bGetZenyNum": {}, // When killing a monster, there is a x% chance of gaining 1~n zeny (only the highest among all is applied)
+    "bAddGetZenyNum": {}, // Same as bGetZenyNum, but the rates and zeny to gain stack
+    "bCriticalAddRace": {}, // Critical + n vs. enemies of race r
+    "bHPRegenRate": {}, // Gain n HP every x milliseconds
+    "bHPLossRate": {}, // Lose n HP every x milliseconds
+    "bAddEffWhenHit": {}, // x/100% chance to cause n state to the enemy when being hit by physical damage
+    "bSkillAtk": {}, // Increase damage of skill n by x% (supports skill names)
+    "bSkillHeal": {}, // Increase heal amount of skill n by x% (supports skill names)
+    "bSkillHeal2": {}, // Increase heal amount if you are healed by skill n by x% (supports skill names)
+    "bAddRace2": {}, // Increase damage by x% vs. enemies of race n (differnt category of race like orcs, goblin, scaraba, etc)
+    "bAddItemHealRate": {}, // Increases HP recovered by n type items by x%, can also use direct item IDs instead of group values
+    "bSPRegenRate": {}, // Gain n SP every x milliseconds
+    "bSPLossRate": {}, // Lose n SP every x milliseconds
+    "bExpAddRace": {}, // Increase exp gained by x% vs. enemies of race n
+    "bSPGainRace": {}, // When killing a monster of race n by physical attack gain x amount of sp
+    "bSubRace2": {}, // Damage x% reduction from enemies of race n (differnt category of race like orcs, goblin, scaraba, etc)
+    "bAddMonsterDropItemGroup": {}, // Adds a x/100% chance to get an item of group type n when you kill a monster
+    "bWeaponComaRace": {}, // y/100% chance to cause Coma when attacking a monster of race x with a normal attack
+    "bAddSkillBlow": {}, // Pushback the target by y cells when using skill x
+    "bIgnoreDefRate": {}, // Disregard x% of the target's DEF if the target belongs to race n
+    "bWeaponComaEle": {}, // Adds a n/100% chance to cause Coma when attacking a monster of element x with normal attack
+    "bAddEff2": [], // Adds a n/100% chance to cause status change x on self when attacking
+    "bWeaponAtk": {}, // Adds n ATK when weapon of type x is equipped
+    "bWeaponAtkRate": {}, // Adds n% damage to normal attacks when weapon of type x is equipped
+    "bHPDrainValueRace": {}, // Adds a n/10% chance to receive x% of dealed damage as HP from a monster of race r with normal attack
+    "bSPDrainValueRace": {}, // Adds a n/10% chance to receive x% of dealed damage as SP from a monster of race r with normal attack
+    "bHPGainRaceAttack": {}, // Heals n HP when attacking x Race on every hit
+    "bSPGainRaceAttack": {}, // Heals n SP when attacking x Race on every hit
+    "bSkillUseSPrate": {}, // Reduces SP consumption of skill s by x%
+    "bSkillUseSP": {}, // Reduces SP consumption of skill s by x
+    "bSkillCooldown": {}, // Increases cooldown of skill s by x milliseconds
+    "bSkillFixedCast": {}, // Increases fixed cast time of skill s by x milliseconds
+    "bSkillVariableCast": {}, // Increases variable cast time of skill s by x milliseconds
+    "bSkillVariableCastrate": {}, // Increases variable cast time of skill s by x% (rAthena uses bVariableCastrate, renamed to remove ambiguity)
 
-    "bAutoSpell": [],
-    "bAutoSpellWhenHit": {},
-    "bAutoSpellOnSkill": {},
-    "bHPDrainRateRace": {},
-    "bSPDrainRateRace": {},
-    "bAddEffOnSkill": {},
-    "bAddClassDropItem": {},
+    "bAutoSpell": [], // Auto Spell casting on attack of spell n at level x with y/10% chance
+    "bAutoSpellWhenHit": {}, // n/10% chance to cast skill x of level y on attacker (unless it is a self or support skill) when being hit by a
+    "bAutoSpellOnSkill": {}, // Adds a n/10% chance to autospell skill x at level l when using skill s
+    "bHPDrainRateRace": {}, // Adds a n/10% chance to receive x% of dealed damage as HP from a monster of race r with normal attack
+    "bSPDrainRateRace": {}, // Adds a n/10% chance to receive x% of dealed damage as SP from a monster of race r with normal attack
+    "bAddEffOnSkill": {}, // Adds a n/100% chance to cause status change x on enemy when using skill s
+    "bAddClassDropItem": {}, // Adds an n/100% chance of dropping item s when killing monster class x
 };
+
+var jsonRefineDefBonus = {
+    "0": 0,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4,
+    "5": 6,
+    "6": 8,
+    "7": 10,
+    "8": 12,
+    "9": 15,
+    "10": 18,
+    "11": 21,
+    "12": 24,
+    "13": 28,
+    "14": 32,
+    "15": 36,
+    "16": 40,
+    "17": 45,
+    "18": 50,
+    "19": 55,
+    "20": 60,
+}
